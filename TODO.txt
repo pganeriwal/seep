@@ -1,0 +1,102 @@
+TESTING:
+    table: 5, 5, 7, 1: player1: 10, 8, 3, 2, only option is to create house with [3, 7]
+        else seep (of 8[7, 1]) if pick [10, [5, 5]] or seep (of 10[[2, 7, 1], [5, 5]]) create house with [2, 7, 1]
+
+The player who has the turn will be the publisher and rest will be subscribers
+Each event should be communicated to all the players
+Save everything on the localstorage for each event
+Game event conflict resolution:
+    check the statusInstant, latest or largest statusInstant will win
+Sort button for sorting asc and desc
+
+TURN RULES:
+    each player will place only one card on the table on his turn
+    RULE-1: create new house
+        to make a new house (single or combined house / pakka ghar) ONLY IF:
+            the player has at least a card in hand bearing the value of the house after playing the card
+            all the cards being combined together should add up to make the total equal to the value of the house being created
+            EITHER (OPEN HOUSE):
+                the card played by the player should combined with other loose card(s) on the table to make the total
+            OR (LOCKED HOUSE):
+                the card being played is equal to the value of the house
+                AND
+                    there are other loose cards that can be combined together equal to the value of the house
+            all the loose cards on the table will also be added to the house, then it will be (LOCKED HOUSE)
+        the player who creates the house becomes the OWNER of the house
+    RULE-2: pick cards
+        to pick all the cards that are:
+            either of same value
+            or combine with other cards on the table to make total equal to the value of the card played
+            if player has picked up cards then it will be added to the group's acquired deck
+            and the captured points will be added to group's total points
+        RULE-2a: SEEP
+            when a player plays with RULE-2 AND there are no more loose cards or house remaining on the table
+                25 points if it is the first turn in the game
+                0 points if it is the last turn in the game
+                50 points otherwise
+    RULE-3: put as a loose card
+        to put his card loose on the table ONLY IF RULE-2 cannot be applied
+    RULE-4: join an existing house not created by your team
+        similar to RULE-1 except:
+            the house will become (LOCKED HOUSE)
+        the player who joins the house becomes the CO-OWNER of the house
+    RULE-5: add cards to an existing house OWNED/CO-OWNED by your teammate
+        similar to RULE-1 except:
+            the house will become (LOCKED HOUSE)
+            the player may not have a card in hand bearing the value of the house after playing the card
+    RULE-6: OWNER / CO-OWNER
+        owner or the co-owner should always have a card in hand bearing the value of the house after playing the card
+        OR they should pick the house that is owned or co-owned by him
+    RULE-7: last pick
+        the team who picks up the last card / house will pick up all the loose cards and points from the table
+    RULE-8: GAME WINNER
+        team that collects most points wins the game and will get the BID in the next game
+        if the points are tied then the BID will be retained by the same person
+    RULE-9: MATCH WINNER
+        in a BAAZI match:
+            the team that has collected more than 100 points than the other team will be the match winner
+            it is calculated after each game
+        in a NORMAL match:
+            the team that wins the GAME wins the MATCH
+
+Everyone (A, B, C, D) will load the page:
+ONLY one (A) will click on "Create" to create the game:
+    4 players, Combined game
+    this will create an object of the game
+    and create a peer for A and shows the peerID to A
+    A will share his peerId with everyone
+rest (B, C, D) will click on "Join" to connect to the game that A has created:
+    this will create peer for everyone
+    once peer is created and open, input field and "Connect" button will be shown to the users
+    provide A's peer Id in the input field and click "Connect"
+    this will make connections with A
+Once everyone (total 3 players, as set in the game) is connected with A
+    then A will communicate all the participants peer Ids and game details with others
+    --rest will connect to each others as well (B to C,D: C: D):
+        not required since the connection can be made when B gets his turn
+once everyone has the game details
+    everyone should click on "Start" to start the game, this will be communicated to A
+once everyone has accepted to start the game
+Once A has the FIRST turn:
+    GOTO-1: 4 cards will be dealt to A
+        Sort and Bid buttons will be shown
+    If A has biddable card (with value 9 or more): A will select and bid a card
+    Else GOTO-1
+    once A has bidded:
+        4 cards will be opened on the table
+    A will play his turn:
+        [RULE-BID, RULE-1 or RULE-2 or RULE-3]
+    player will click on "Confirm" button to complete his turn
+Once A has played his turn:
+    now all the cards will be dealt to the players
+        Sort button will be shown
+    communicate game details (peer Ids of the participants, etc) to the rest
+    turn will be passed to next player (B)
+Once B has the turn: (rest all the turns will be similar except for the rules)
+    now B will connect to everyone else who's connection doesn't exist with B, like (C, D)
+    PLAY turn:
+        [RULE-1 or RULE-2 or RULE-3 or RULE-4]
+    player will click on "Confirm" button to complete his turn
+Once  has the turn:
+
+and share hi
