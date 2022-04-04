@@ -1,6 +1,6 @@
 TESTING:
     table: 5, 5, 7, 1: player1: 10, 8, 3, 2, only option is to create house with [3, 7]
-        else seep (of 8[7, 1]) if pick [10, [5, 5]] or seep (of 10[[2, 7, 1], [5, 5]]) create house with [2, 7, 1]
+        else seep (of 8[7, 1]) if pick [10, [5, 5]] or seep (of 10[[2, 7, 1], [5, 5]]) if create house with [2, 7, 1]
 
 The player who has the turn will be the publisher and rest will be subscribers
 Each event should be communicated to all the players
@@ -43,18 +43,19 @@ TURN RULES:
     RULE-5: add cards to an existing house OWNED/CO-OWNED by your teammate
         similar to RULE-1 except:
             the house will become (LOCKED HOUSE)
-            the player may not have a card in hand bearing the value of the house after playing the card
+            (CO-OWNED): the player may not have a card in hand bearing the value of the house after playing the card
+            (OWNED): the player MUST have a card in hand bearing the value of the house after playing the card
     RULE-6: OWNER / CO-OWNER
-        owner or the co-owner should always have a card in hand bearing the value of the house after playing the card
+        owner or the co-owner MUST always have a card in hand bearing the value of the house after playing the card
         OR they should pick the house that is owned or co-owned by him
     RULE-7: last pick
         the team who picks up the last card / house will pick up all the loose cards and points from the table
     RULE-8: GAME WINNER
         team that collects most points wins the game and will get the BID in the next game
-        if the points are tied then the BID will be retained by the same person
+        if the points are tied then the BID will be retained by the same person/team
     RULE-9: MATCH WINNER
         in a BAAZI match:
-            the team that has collected more than 100 points than the other team will be the match winner
+            winner is the team that has collected equal to or more than 100 points than the other team
             it is calculated after each game
         in a NORMAL match:
             the team that wins the GAME wins the MATCH
@@ -78,12 +79,12 @@ once everyone has the game details
     everyone should click on "Start" to start the game, this will be communicated to A
 once everyone has accepted to start the game
 Once A has the FIRST turn:
-    GOTO-1: 4 cards will be dealt to A
+    GOTO-1: 4 random cards will be dealt to A
         Sort and Bid buttons will be shown
     If A has biddable card (with value 9 or more): A will select and bid a card
     Else GOTO-1
     once A has bidded:
-        4 cards will be opened on the table
+        4 random cards will be opened on the table
     A will play his turn:
         [RULE-BID, RULE-1 or RULE-2 or RULE-3]
     player will click on "Confirm" button to complete his turn
@@ -97,6 +98,9 @@ Once B has the turn: (rest all the turns will be similar except for the rules)
     PLAY turn:
         [RULE-1 or RULE-2 or RULE-3 or RULE-4]
     player will click on "Confirm" button to complete his turn
-Once  has the turn:
+Once D has played the last turn of the Game:
+    total points will be calculated
+    and the Game will proceed ahead if BAAZI
+    OR winner will be decided
 
-and share hi
+https://meetrix.io/blog/webrtc/how-to-setup-a-signaling-server.html

@@ -1,42 +1,6 @@
-var isObject = function (obj) {
-    return obj && "[object Object]" === Object.prototype.toString.call(obj);
-};
+import { customLog, forEachInOrder, shuffleArray, pushToArray } from "./util.js";
 
-var forEachInOrder = function (obj, iteratorFunction) {
-    if ((Array.isArray(obj) || isObject(obj)) && "function" === typeof iteratorFunction) {
-        var keysInOrder = null;
-        try {
-            keysInOrder = Object.keys(obj);
-        } catch (e) {
-            keysInOrder = null;
-        }
-        if (keysInOrder) {
-            keysInOrder.forEach((key, index, keysArray) => {
-                if (key) {
-                    iteratorFunction(obj[key], key, index, keysArray);
-                }
-            });
-        }
-    }
-};
-
-var shuffleArray = function (array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-};
-
-var pushToArray = function (dest, source) {
-    let ret = false;
-    if (Array.isArray(dest) && Array.isArray(source)) {
-        Array.prototype.push.apply(dest, source);
-        ret = true;
-    }
-    return ret;
-};
-
-var deck = (function () {
+export const deck = (function () {
     let _deck = {};
 
     _deck.BLACK = "black";
@@ -205,10 +169,7 @@ var deck = (function () {
     return _deck;
 })();
 
-
-
-
-var game = (function () {
+export const game = (function () {
     let _game = {};
 
     _game.STATES = {};
@@ -307,10 +268,12 @@ var game = (function () {
 
     const firstDeal = function () {
         //shuffle the deck
+        // _game._playingDeckArray = Object.values(_game._playingDeck);
+        //pg debugging
         _game._playingDeckArray = _game._deck.getShuffledDeckArray(_game._playingDeck);
         //start dealing
         const dealt = dealToBiddingPlayer(isAnyHouseCard);
-        console.log("dealt: " + dealt);
+        customLog("dealt: " + dealt);
         if (!dealt) {
             firstDeal();
         };
@@ -500,9 +463,9 @@ var game = (function () {
         _game._playingDeckArray = null;
         _game._state = _game.STATES.RESET;
     };
-    _game.init = function (totalPlayers, totalTeams, deck) {
+    _game.init = function (totalPlayers, totalTeams, localDeck) {
         _game.reset();
-        _game._deck = deck;
+        _game._deck = localDeck || deck;
         _game._totalPlayers = ("number" === typeof totalPlayers) ? totalPlayers : 4;
         _game._totalTeams = ("number" === typeof totalTeams) ? totalTeams : 2;
         createTeams(_game._totalTeams);
@@ -676,9 +639,9 @@ var game = (function () {
         };
         if (isValidCardNumber(checkNumber) && Array.isArray(cards)) {
             if (!isRecursive) {
-                console.log("checkNumber: " + checkNumber);
-                console.log("cards");
-                console.log(cards);
+                customLog("checkNumber: " + checkNumber);
+                customLog("cards");
+                customLog(cards);
                 //this is the first call to this function, hence singleCards can be checked here only
                 ret.singleCards = filterSameNumberCards(checkNumber, cards);
             }
@@ -887,11 +850,12 @@ var game = (function () {
         let ret = false;
         if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
+            customLog(`creating house of (number): ${houseNumber}`);
             const house = new House(houseNumber);
             _game._table.houses = _game._table.houses || {};
             _game._table.houses[house.number] = house;
             ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
-            console.log("isHouseLocked: " + isHouseLocked(house));
+            customLog(`isHouseLocked: ${isHouseLocked(house)}`);
         }
         return ret;
     };
@@ -900,6 +864,7 @@ var game = (function () {
         let ret = false;
         if (isValidCardNumber(pickNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
+            customLog(`picking card(s) of (number): ${pickNumber}`);
             /**
              * ideally we should validate if the combinations are valid or not again
              * but now we are only validating the total
@@ -921,14 +886,16 @@ var game = (function () {
             mergeCardGroups(_game._teams[player.team].pickedCardGroups, allCardGroups);
             player.cards = _game._deck.removeCards([playingCard], player.cards);
             ret = true;
-            console.log("team pick value total: " + _game._teams[player.team].pickedCardGroups._value);
+            customLog("team pick value total: " + _game._teams[player.team].pickedCardGroups._value);
         }
         return ret;
     };
 
     turn.play[_game.RULES.RULE_PUT_LOOSE] = function (putNumber, playingCard, player) {
         let ret = false;
-        if (isValidCardNumber(putNumber) && isValidCardWithNumber(playingCard) && player && Array.isArray(player.cards)) {
+        if (isValidCardNumber(putNumber) && isValidCardWithNumber(playingCard) && player
+            && Array.isArray(player.cards)) {
+            customLog(`putting loose card of (number): ${putNumber}`);
             //check if combinations exists on the table
             let otherCombinations = _game.getCombinationsOnTable(putNumber);
             if (!otherCombinations.found) {
@@ -945,10 +912,12 @@ var game = (function () {
         let ret = false;
         let house = null;
         if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
-            && Array.isArray(combinations) && player && Array.isArray(player.cards) && (house = getHouseForNumber(houseNumber))) {
+            && Array.isArray(combinations) && player && Array.isArray(player.cards)
+            && (house = getHouseForNumber(houseNumber))) {
             if (!isPlayersTeamHouseOwner(house, player)) {
+                customLog(`joining house of (number): ${houseNumber}`);
                 ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
-                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
+                customLog("Should be true always isHouseLocked: " + isHouseLocked(house));
             }
         }
         return ret;
@@ -962,8 +931,9 @@ var game = (function () {
         if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards) && (house = getHouseForNumber(houseNumber))) {
             if (isPlayersTeamHouseOwner(house, player)) {
+                customLog(`adding card to house of (number): ${houseNumber}`);
                 ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
-                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
+                customLog("Should be true always isHouseLocked: " + isHouseLocked(house));
             }
         }
         return ret;
@@ -975,8 +945,8 @@ var game = (function () {
             const playHandler = turn.play[choice.turn];
             if ("function" === typeof playHandler) {
                 played = playHandler(choice.number, choice.playingCard, player, choice.combinations);
-                console.log("Table after turn:");
-                console.log(_game._table);
+                customLog("Table after turn:");
+                customLog(_game._table);
             }
         }
         return played;
@@ -1081,7 +1051,7 @@ var game = (function () {
             const smallerNumberCards = filterSmallerNumberCards(houseNumber, cards);
             const pushChoicesForCardNumber = (card, number) => {
                 let combinations = _game.getCombinationsOnTable(number);
-                console.log(combinations);
+                customLog(combinations);
                 let createTurn = _game.RULES.RULE_CREATE_HOUSE;
                 let choices;
                 if (houseNumber === number) {
@@ -1125,29 +1095,29 @@ var game = (function () {
         const biddingPlayer = _game.getBiddingPlayer();
         const biddingPlayerCards = biddingPlayer.cards;
 
-        console.log("biddingPlayer.cards:");
-        console.log(biddingPlayer.cards);
         _game.sortCards(biddingPlayerCards);
+        customLog("biddingPlayer.cards:");
+        customLog(biddingPlayer.cards);
 
-        console.log("bidding for card:");
-        console.log(biddingPlayerCards[0]);
+        customLog("bidding for card:");
+        customLog(biddingPlayerCards[0]);
         _game.bid(biddingPlayerCards[0]);
 
-        console.log("anyCombinationsOnTable for number:");
-        console.log(biddingPlayerCards[0].number);
+        customLog("anyCombinationsOnTable for number:");
+        customLog(biddingPlayerCards[0].number);
         let combinations = _game.anyCombinationsOnTable(biddingPlayerCards[0].number);
-        console.log("combinations found for number:");
-        console.log(combinations);
+        customLog("combinations found for number:");
+        customLog(combinations);
 
-        console.log("combinations for house number:");
-        console.log(biddingPlayerCards[0].number);
+        customLog("combinations for house number:");
+        customLog(biddingPlayerCards[0].number);
         const allFirstPlayerChoices = _game.getTurnChoicesForHouseNumber(biddingPlayerCards[0].number, biddingPlayerCards);
-        console.log("allCreateChoices:");
-        console.log(allFirstPlayerChoices);
+        customLog("allCreateChoices:");
+        customLog(allFirstPlayerChoices);
         const createChoices = allFirstPlayerChoices[_game.RULES.RULE_CREATE_HOUSE];
         const pickChoices = allFirstPlayerChoices[_game.RULES.RULE_PICK_CARDS];
         let firstTurnPlayed = false;
-        if (false && createChoices && 1 <= createChoices.length) {
+        if (createChoices && 1 <= createChoices.length) {
             //create a house if possible
             //optimisation can be done later
             const createChoice = createChoices[0];
@@ -1172,10 +1142,9 @@ var game = (function () {
         if (firstTurnPlayed) {
             dealAfterFirstTurn();
             const nextPlayer = _game.changeTurnAndGetNextPlayer();
-            console.log("nextPlayer:");
-            console.log(nextPlayer);
+            customLog("nextPlayer:");
+            customLog(nextPlayer);
         }
     };
     return _game;
 })();
-game.test();
