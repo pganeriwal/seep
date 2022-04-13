@@ -40,12 +40,39 @@
             Loose Cards on the Table:
         <ul>
             <li v-for="card in looseCardsOnTable">
-                {{ card }}
+                {{ card.id }}
             </li>
         </ul>
         </p>
         <p>
-            Homes on the Table:
+            Houses on the Table:
+        <ul>
+            <li v-for="house in housesOnTable">
+                House Number: {{ house.number }}
+                <br>
+                House Cards: {{ house }}
+                <ul v-for="cardGroups in house.cardGroups">
+                    <li v-for="card in cardGroups">
+                        {{ card.id }}
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        </p>
+        <p>
+            Players:
+        <div>
+            <q-card class="my-card" v-for="player in players">
+                <q-card-section>
+                    Player Id: {{ player.id }} Cards:
+                    <ul>
+                        <li v-for="card in player.cards">
+                            {{ card.id }}
+                        </li>
+                    </ul>
+                </q-card-section>
+            </q-card>
+        </div>
         </p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/quasar@2.6.5/dist/quasar.umd.prod.js"></script>

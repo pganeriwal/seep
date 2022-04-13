@@ -9,6 +9,7 @@ var app = Vue.createApp({// Vue 3.0
             otherPeerId: otherPeerId,
             messageForPeer: "",
             totalPlayers: 4,
+            players: [],
             table: null,
         };
     },
@@ -24,13 +25,18 @@ var app = Vue.createApp({// Vue 3.0
         },
         test() {
             game.test();
+            this.players = Object.values(game._players);
+            this.table = game._table;
         },
         init() {
+            this.players = [];
             game.init(this.totalPlayers);
-            game.addPlayer({ id: 1 });
-            game.addPlayer({ id: 2 });
-            game.addPlayer({ id: 3 });
-            game.addPlayer({ id: 4 });
+
+            for (let id = 1; id <= this.totalPlayers; id++) {
+                const player = { id };
+                this.players.push(player);
+                game.addPlayer(player);
+            }
 
             this.table = game._table;
         }
@@ -38,6 +44,9 @@ var app = Vue.createApp({// Vue 3.0
     computed: {
         looseCardsOnTable() {
             return this.table && this.table.cards;
+        },
+        housesOnTable() {
+            return this.table && this.table.houses;
         },
     },
 });
