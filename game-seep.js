@@ -821,7 +821,7 @@ export const game = (function () {
 
     const playCardToCreateJoinAddHouse = function (house, playingCard, combinations, player) {
         let ret = false;
-        if (isValidHouse(house.number) && isValidCardWithNumber(playingCard)
+        if (isValidHouse(house) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
             /**
              * ideally we should validate if the combinations are valid or not again

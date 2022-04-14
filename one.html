@@ -38,26 +38,26 @@
         <br>
         <p>
             Loose Cards on the Table:
-        <ul>
+        <ol>
             <li v-for="card in looseCardsOnTable">
                 {{ card.id }}
             </li>
-        </ul>
+        </ol>
         </p>
         <p>
             Houses on the Table:
-        <ul>
+        <ol>
             <li v-for="house in housesOnTable">
                 House Number: {{ house.number }}
                 <br>
                 House Cards: {{ house }}
-                <ul v-for="cardGroups in house.cardGroups">
+                <ol v-for="cardGroups in house.cardGroups">
                     <li v-for="card in cardGroups">
                         {{ card.id }}
                     </li>
-                </ul>
+                </ol>
             </li>
-        </ul>
+        </ol>
         </p>
         <p>
             Players:
@@ -65,11 +65,11 @@
             <q-card class="my-card" v-for="player in players">
                 <q-card-section>
                     Player Id: {{ player.id }} Cards:
-                    <ul>
+                    <ol>
                         <li v-for="card in player.cards">
                             {{ card.id }}
                         </li>
-                    </ul>
+                    </ol>
                 </q-card-section>
             </q-card>
         </div>
