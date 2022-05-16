@@ -269,7 +269,6 @@ export const game = (function () {
     const firstDeal = function () {
         //shuffle the deck
         // _game._playingDeckArray = Object.values(_game._playingDeck);
-        //pg debugging
         _game._playingDeckArray = _game._deck.getShuffledDeckArray(_game._playingDeck);
         //start dealing
         const dealt = dealToBiddingPlayer(isAnyHouseCard);
@@ -1084,7 +1083,7 @@ export const game = (function () {
         return turnChoices;
     };
 
-    _game.test = function () {
+    _game.test = function* () {
         _game.init(4, 2, deck);
         _game.addPlayer({ id: 1 });
         _game.addPlayer({ id: 2 });
@@ -1099,9 +1098,13 @@ export const game = (function () {
         customLog("biddingPlayer.cards:");
         customLog(biddingPlayer.cards);
 
+        // yield;
+
         customLog("bidding for card:");
         customLog(biddingPlayerCards[0]);
         _game.bid(biddingPlayerCards[0]);
+
+        // yield;
 
         customLog("anyCombinationsOnTable for number:");
         customLog(biddingPlayerCards[0].number);
@@ -1109,26 +1112,32 @@ export const game = (function () {
         customLog("combinations found for number:");
         customLog(combinations);
 
+        // yield;
+
         customLog("combinations for house number:");
         customLog(biddingPlayerCards[0].number);
         const allFirstPlayerChoices = _game.getTurnChoicesForHouseNumber(biddingPlayerCards[0].number, biddingPlayerCards);
         customLog("allCreateChoices:");
         customLog(allFirstPlayerChoices);
+
         const createChoices = allFirstPlayerChoices[_game.RULES.RULE_CREATE_HOUSE];
         const pickChoices = allFirstPlayerChoices[_game.RULES.RULE_PICK_CARDS];
+
+        const choiceSelected = yield { createChoices, pickChoices };
+
         let firstTurnPlayed = false;
-        if (createChoices && 1 <= createChoices.length) {
+        if ((!choiceSelected || 'create' === choiceSelected) && createChoices && 1 <= createChoices.length) {
             //create a house if possible
             //optimisation can be done later
             const createChoice = createChoices[0];
             firstTurnPlayed = _game.playTurnWithChoice(createChoice, biddingPlayer);
-        } else if (pickChoices && 1 <= pickChoices.length) {
+        } else if ((!choiceSelected || 'pick' === choiceSelected) && pickChoices && 1 <= pickChoices.length) {
             //if a house cannot be created
             //pick cards if possible
             //optimisation can be done later
             const pickChoice = pickChoices[0];
             firstTurnPlayed = _game.playTurnWithChoice(pickChoice, biddingPlayer);
-        } else {
+        } else if ((!choiceSelected || 'put' === choiceSelected)) {
             //if a house cannot be created
             //and cards cannot be picked
             //then put the first same value card
@@ -1139,6 +1148,9 @@ export const game = (function () {
                 playingCard: biddingPlayerCards[0]
             }, biddingPlayer);
         }
+
+        yield;
+
         if (firstTurnPlayed) {
             dealAfterFirstTurn();
             const nextPlayer = _game.changeTurnAndGetNextPlayer();
