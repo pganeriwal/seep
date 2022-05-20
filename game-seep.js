@@ -131,9 +131,11 @@ export const deck = (function () {
         }
         return ret;
     };
-    _deck.getShuffledDeckArray = function (deckObject) {
+    _deck.getDeckArray = function (deckObject, shuffled) {
         let array = Object.values(deckObject);
-        _deck.shuffleDeckArray(array);
+        if (shuffled) {
+            _deck.shuffleDeckArray(array);
+        }
         return array;
     };
     _deck.init = function (config) {
@@ -188,20 +190,44 @@ export const game = (function () {
     _game.RULES.RULE_JOIN_HOUSE = "join";
     _game.RULES.RULE_ADD_CARDS_TO_HOUSE = "add";
 
-    const dealCards = function (numberOfCards, target, checkDealCards) {
+    _game.dealCardsSourceToTarget = function (sourceCards, cardsToBeDealt, target, checkDealCards) {
         let dealt = false;
-        if (1 <= numberOfCards && target) {
+        if (sourceCards && 1 <= cardsToBeDealt.length && target) {
+            const indexes = [];
+            const dealingCards = [];
+            const tempCardsToBeDealt = [...cardsToBeDealt];
+
+            sourceCards.forEach((sourceCard, index) => {
+                const tempIndex = tempCardsToBeDealt.findIndex(tempCard => tempCard.id === sourceCard.id);
+                if (-1 < tempIndex) {
+                    dealingCards.push(sourceCard);
+                    indexes.push(index);
+                    tempCardsToBeDealt.splice(tempIndex, 1);
+                }
+            });
+
+            const proceedDeal = ("function" === typeof checkDealCards) ? checkDealCards(dealingCards) : true;
+
+            if (proceedDeal) {
+                indexes.sort((a, b) => b - a);
+                indexes.forEach(index => {
+                    sourceCards.splice(index, 1);
+                });
+                target.cards = (target.cards || []).concat(dealingCards);
+                dealt = true;
+            }
+        }
+        return dealt;
+    };
+
+    const dealCardsFromDeck = function (numberOfCards, target, checkDealCards) {
+        let dealt = false;
+        if (1 <= numberOfCards) {
             const totalCardsInDeck = _game._playingDeckArray.length;
             numberOfCards = (numberOfCards <= totalCardsInDeck) ? numberOfCards : totalCardsInDeck;
 
             const dealingCards = _game._playingDeckArray.slice(0, numberOfCards);
-            const proceedDeal = ("function" === typeof checkDealCards) ? checkDealCards(dealingCards) : true;
-
-            if (proceedDeal) {
-                const dealtCards = _game._playingDeckArray.splice(0, numberOfCards);
-                target.cards = (target.cards || []).concat(dealtCards);
-                dealt = true;
-            }
+            dealt = _game.dealCardsSourceToTarget(_game._playingDeckArray, dealingCards, target, checkDealCards);
         }
         return dealt;
     };
@@ -249,29 +275,27 @@ export const game = (function () {
 
     const dealToBiddingPlayer = function (checkDealCards) {
         //deal 4 cards from _game._playingDeckArray to the player who has the turn to bid
-        return dealCards(4, _game.getBiddingPlayer(), checkDealCards);
+        return dealCardsFromDeck(4, _game.getBiddingPlayer(), checkDealCards);
     };
 
     const dealAfterBidOnTable = function () {
         //deal 4 cards from _game._playingDeckArray on the table
-        return dealCards(4, _game._table);
+        return dealCardsFromDeck(4, _game._table);
     };
 
     const dealAfterFirstTurn = function () {
         forEachInOrder(_game._players, (player, id, i) => {
             if (player) {
                 const numberOfCards = (player.hasBid) ? 8 : 12;
-                dealCards(numberOfCards, player);
+                dealCardsFromDeck(numberOfCards, player);
             }
         });
     };
 
     const firstDeal = function () {
-        //shuffle the deck
-        // _game._playingDeckArray = Object.values(_game._playingDeck);
-        _game._playingDeckArray = _game._deck.getShuffledDeckArray(_game._playingDeck);
         //start dealing
-        const dealt = dealToBiddingPlayer(isAnyHouseCard);
+        //pg
+        const dealt = dealToBiddingPlayer(/*isAnyHouseCard*/);
         customLog("dealt: " + dealt);
         if (!dealt) {
             firstDeal();
@@ -470,7 +494,11 @@ export const game = (function () {
         createTeams(_game._totalTeams);
         _game._deck.init();
         _game._playingDeck = _game._deck.createPlayingDeck(null, checkCard);
+        _game._playingDeckArray = _game._deck.getDeckArray(_game._playingDeck);
         _game._state = _game.STATES.INIT;
+    };
+    _game.shuffleDeck = function () {
+        _game._deck.shuffleDeckArray(_game._playingDeckArray);
     };
     _game.destroy = function () {
         _game.reset();
@@ -510,7 +538,7 @@ export const game = (function () {
         const aHouseCard = isHouseCard(card);
         if (aHouseCard) {
             _game._bidCard = card;
-            dealAfterBidOnTable();
+            // dealAfterBidOnTable();
         } else {
             //TODO: show invalid move
             alert("Invalid card, select a card greater than or equal to 9");
@@ -1089,7 +1117,9 @@ export const game = (function () {
         _game.addPlayer({ id: 2 });
         _game.addPlayer({ id: 3 });
         _game.addPlayer({ id: 4 });
-        _game.start();
+        // _game.start();
+
+        yield;
 
         const biddingPlayer = _game.getBiddingPlayer();
         const biddingPlayerCards = biddingPlayer.cards;
@@ -1098,13 +1128,13 @@ export const game = (function () {
         customLog("biddingPlayer.cards:");
         customLog(biddingPlayer.cards);
 
-        // yield;
+        yield { bid: biddingPlayerCards[0] };
 
         customLog("bidding for card:");
         customLog(biddingPlayerCards[0]);
         _game.bid(biddingPlayerCards[0]);
 
-        // yield;
+        yield;
 
         customLog("anyCombinationsOnTable for number:");
         customLog(biddingPlayerCards[0].number);

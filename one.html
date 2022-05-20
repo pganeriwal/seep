@@ -80,6 +80,8 @@
                 <q-card-section>
                     <q-btn @click="sortCards(player.id)" label="Sort my cards" :disabled="!testing || !player.cards">
                     </q-btn>
+                    <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" label="Deal Me"
+                        :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
                     Player Id: {{ player.id }} Cards:
                     <ol>
                         <li v-for="card in player.cards">
@@ -103,6 +105,15 @@
         <p>
             Bidding card: {{ biddingCard?.id }}
         </p>
+        <p>
+            Playing Deck:
+            <q-select outlined v-model="selectedCardsFromDeck" :options="playingDeckArray" option-value="id"
+                option-label="id" label="Select Cards" multiple />
+        </p>
+        <br>
+        <q-btn @click="dealSelectedCardsFromDeckOnTable" label="Deal on Table"
+            :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
+        <q-btn @click="shuffleDeck" label="Shuffle Deck" v-if="playingDeckArray.length"></q-btn>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/quasar@2.6.5/dist/quasar.umd.prod.js"></script>
     <script type="module" src="app.js"></script>

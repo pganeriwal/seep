@@ -17,6 +17,8 @@ var app = Vue.createApp({// Vue 3.0
             biddingCard: null,
             createChoices: null,
             pickChoices: null,
+            playingDeckArray: [],
+            selectedCardsFromDeck: [],
         };
     },
     methods: {
@@ -29,42 +31,12 @@ var app = Vue.createApp({// Vue 3.0
         sendMessageToPeers: function () {
             const ret = webConnect.sendMessageToPeers(this.messageForPeer);
         },
-        test() {
-            this.biddingCard = null;
-            this.testing = game.test();
-            this.next();
-            this.players = Object.values(game._players);
-            this.teams = game._teams;
-            this.table = game._table;
-        },
-        next(choice) {
-            this.createChoices = null;
-            this.pickChoices = null;
-            if (this.testing) {
-                const { done, value } = this.testing.next(choice);
-                if (done) {
-                    this.testing.done = done;
-                }
-                if (value) {
-                    this.createChoices = value.createChoices;
-                    this.pickChoices = value.pickChoices;
-                }
-                this.updateData();
-            }
-        },
-        selectCreate() {
-            this.next('create');
-        },
-        selectPick() {
-            this.next('pick');
-        },
-        selectPut() {
-            this.next('put');
-        },
         init() {
             this.players = [];
             this.teams = {};
             this.biddingCard = null;
+            this.playingDeckArray = [];
+            this.selectedCardsFromDeck = [];
             game.init(this.totalPlayers);
 
             for (let id = 1; id <= this.totalPlayers; id++) {
@@ -75,11 +47,37 @@ var app = Vue.createApp({// Vue 3.0
 
             this.table = game._table;
         },
+        test() {
+            this.biddingCard = null;
+            this.selectedCardsFromDeck = [];
+            this.testing = game.test();
+            this.next();
+        },
+        next(choice) {
+            this.createChoices = null;
+            this.pickChoices = null;
+            if (this.testing) {
+                const { done, value } = this.testing.next(choice);
+                if (done) {
+                    this.testing.done = done;
+                }
+                if (value) {
+                    const { createChoices, pickChoices, bid } = value;
+                    this.createChoices = createChoices;
+                    this.pickChoices = pickChoices;
+                    if (bid) {
+                        this.biddingCard = bid;
+                    }
+                }
+                this.updateData();
+            }
+        },
         updateData() {
             this.players = Object.values(game._players);
             this.teams = Object.assign({}, game._teams);
             this.table = Object.assign({}, game._table);
-            this.biddingCard = this.biddingCard || game.getBiddingPlayer().cards[0];
+            this.playingDeckArray = [...game._playingDeckArray];
+            this.selectedCardsFromDeck = [];
         },
         sortCards(playerId) {
             const players = playerId ? [game._players[playerId]] : Object.values(game._players);
@@ -90,6 +88,35 @@ var app = Vue.createApp({// Vue 3.0
         },
         pickedCardGroups(team) {
             return this.teams?.[team]?.pickedCardGroups;
+        },
+        selectCreate() {
+            this.next('create');
+        },
+        selectPick() {
+            this.next('pick');
+        },
+        selectPut() {
+            this.next('put');
+        },
+        shuffleDeck() {
+            game.shuffleDeck();
+            this.updateData();
+        },
+        dealSelectedCardsFromDeckOnTable() {
+            if (this.selectedCardsFromDeck && 4 === this.selectedCardsFromDeck.length) {
+                const dealt = game.dealCardsSourceToTarget(
+                    game._playingDeckArray, this.selectedCardsFromDeck, game._table
+                );
+                this.next();
+            }
+        },
+        dealSelectedCardsFromDeckToPlayer(player) {
+            if (this.selectedCardsFromDeck && 4 === this.selectedCardsFromDeck.length) {
+                const dealt = game.dealCardsSourceToTarget(
+                    game._playingDeckArray, this.selectedCardsFromDeck, player
+                );
+                this.next();
+            }
         },
     },
     computed: {
