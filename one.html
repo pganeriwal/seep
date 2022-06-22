@@ -42,46 +42,52 @@
         <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="4">4</input>
         <q-btn @click="init" label="Init"></q-btn>
         <br>
+        <div class="q-pa-md row items-start q-gutter-md">
+            <q-card class="table-cards">
+                <q-card-section>
+                    <p>
+                        Loose Cards on the Table:
+                    </p>
+                    <ol>
+                        <li v-for="card in looseCardsOnTable">
+                            {{ card.id }}
+                        </li>
+                    </ol>
+                </q-card-section>
+            </q-card>
+            <q-card class="table-houses">
+                <q-card-section>
+                    <p>
+                        Houses on the Table:
+                    </p>
+                    <ol>
+                        <li v-for="house in housesOnTable">
+                            <p>
+                                House Info:
+                                <br>
+                                Number: <b>{{ house.number }}</b>
+                                <br>
+                                Owner: <b>{{ house.owner }}</b>
+                                <br>
+                                Owner Team: <b>{{ house.ownerTeam }}</b>
+                                <br>
+                                Value: <b>{{ house.value }}</b>
+                            </p>
+                            <ol v-for="cardGroups in house.cardGroups">
+                                <li v-for="card in cardGroups">
+                                    {{ card.id }}
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </q-card-section>
+            </q-card>
+        </div>
         <p>
-            Loose Cards on the Table:
-        <ol>
-            <li v-for="card in looseCardsOnTable">
-                {{ card.id }}
-            </li>
-        </ol>
-        </p>
-        <p>
-            Houses on the Table:
-        <ol>
-            <li v-for="house in housesOnTable">
-                <p>
-                    House Info:
-                    <br>
-                    Number: <b>{{ house.number }}</b>
-                    <br>
-                    Owner: <b>{{ house.owner }}</b>
-                    <br>
-                    Owner Team: <b>{{ house.ownerTeam }}</b>
-                    <br>
-                    Value: <b>{{ house.value }}</b>
-                </p>
-                <ol v-for="cardGroups in house.cardGroups">
-                    <li v-for="card in cardGroups">
-                        {{ card.id }}
-                    </li>
-                </ol>
-            </li>
-        </ol>
-        </p>
-        <p>
-            Players:
-        <div>
+        <div>Players:</div>
+        <div class="q-pa-md row items-start q-gutter-md">
             <q-card class="my-card" v-for="player in players">
                 <q-card-section>
-                    <q-btn @click="sortCards(player.id)" label="Sort my cards" :disabled="!testing || !player.cards">
-                    </q-btn>
-                    <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" label="Deal Me"
-                        :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
                     Player Id: {{ player.id }} Cards:
                     <ol>
                         <li v-for="card in player.cards">
@@ -98,6 +104,14 @@
                             {{ card.id }}
                         </li>
                     </ol>
+                    <q-card-actions>
+                        <q-btn @click="sortCards(player.id)" label="Sort my cards"
+                            :disabled="!testing || !player.cards">
+                        </q-btn>
+                        <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" label="Deal Me"
+                            :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)">
+                        </q-btn>
+                    </q-card-actions>
                 </q-card-section>
             </q-card>
         </div>
