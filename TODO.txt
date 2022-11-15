@@ -1,4 +1,6 @@
 TESTING:
+    player: 13, 3, 2, 1; table: 10, 9, 9, 4:
+        when house is created of 13 [3, 10] then 4 is duplicated [[9,4][9,4]]
     table: 5, 5, 7, 1: player1: 10, 8, 3, 2, only option is to create house with [3, 7]
         else seep (of 8[7, 1]) if pick [10, [5, 5]] or seep (of 10[[2, 7, 1], [5, 5]]) if create house with [2, 7, 1]
 

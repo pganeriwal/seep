@@ -799,6 +799,38 @@ export const game = (function () {
         return cardGroups;
     };
 
+    const filterCombinations = (combinations, mode) => {
+        if (combinations && combinations.found && combinations.cardGroups.length) {
+            switch (mode) {
+                case "first": {
+                    combinations.cardGroups.splice(1, Infinity);
+                    break;
+                }
+                case "max-value": {
+                    let cardsWithMaxValue = combinations.cardGroups.reduce((maxValCards, cards) => {
+                        if (!maxValCards || cards._value > maxValCards._value) {
+                            maxValCards = cards;
+                        }
+                        return maxValCards;
+                    }, null);
+                    combinations.cardGroups.splice(0, Infinity);
+                    combinations.cardGroups.push(cardsWithMaxValue);
+                    break;
+                }
+                case "duplicate-max":
+                default: {
+                    const duplicateCard = {};
+                    const combinationInfo = [];
+                    combinations.cardGroups.forEach((cards, index) => {
+                        //pg//TODO
+                    });
+                    break;
+                }
+            }
+        }
+        return combinations;
+    };
+
     const addCardToCombination = (card, combination, addAtStart) => {
         let ret = false;
         if (isValidCardWithNumber(card) && Array.isArray(combination)) {
@@ -861,6 +893,7 @@ export const game = (function () {
             //add other combinations on the table with addCardGroupsToHouse
             let otherCombinations = _game.getCombinationsOnTable(house.number);
             if (otherCombinations.found) {
+                filterCombinations(otherCombinations);
                 const sameCardGroups = getCardGroupsForCombinations(otherCombinations);
                 mergeCardGroups(allCardGroups, sameCardGroups);
                 _game._table.cards = _game._deck.removeCardGroups(sameCardGroups, _game._table.cards);
