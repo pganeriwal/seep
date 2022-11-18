@@ -22,13 +22,13 @@
 <body>
     <div id="app">
         <q-btn @click="test" label="Test Game"></q-btn>
-        <q-btn @click="next" label="Next" :disabled="!testing || testing.done"></q-btn>
-        <q-btn @click="sortCards()" label="Sort all players' cards" :disabled="!testing"></q-btn>
+        <q-btn @click="next" label="Next" :disable="!testing || testing.done"></q-btn>
+        <q-btn @click="sortCards()" label="Sort all players' cards" :disable="!testing"></q-btn>
         <br>
         <br>
-        <q-btn @click="selectCreate" label="Create House" :disabled="!(createChoices && createChoices.length)"></q-btn>
-        <q-btn @click="selectPick" label="Pick Cards" :disabled="!(pickChoices && pickChoices.length)"></q-btn>
-        <q-btn @click="selectPut" label="Put Card" :disabled="!pickChoices || pickChoices.length"></q-btn>
+        <q-btn @click="selectCreate" label="Create House" :disable="!(createChoices && createChoices.length)"></q-btn>
+        <q-btn @click="selectPick" label="Pick Cards" :disable="!(pickChoices && pickChoices.length)"></q-btn>
+        <q-btn @click="selectPut" label="Put Card" :disable="!pickChoices || pickChoices.length"></q-btn>
         <br>
         <br>
         <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="2">2</input>
@@ -43,7 +43,8 @@
                     </p>
                     <ol>
                         <li v-for="card in looseCardsOnTable">
-                            {{ card.id }}
+                            <q-checkbox v-model="selectedCardsOrHousesOnTable" :val="card" :label="card.id"
+                                :color="card.colour" :class="getColorClass(card.colour)" keep-color />
                         </li>
                     </ol>
                 </q-card-section>
@@ -56,9 +57,7 @@
                     <ol>
                         <li v-for="house in housesOnTable">
                             <p>
-                                House Info:
-                                <br>
-                                Number: <b>{{ house.number }}</b>
+                                <q-checkbox v-model="selectedCardsOrHousesOnTable" :val="house" :label="house.number" />
                                 <br>
                                 Owner: <b>{{ house.owner }}</b>
                                 <br>
@@ -81,12 +80,13 @@
         <p>
         <div>Players:</div>
         <div class="q-pa-md row items-start q-gutter-md">
-            <q-card class="my-card" v-for="player in players">
+            <q-card class="my-card" :class="player.hasTurn ? 'bg-info': ''" v-for="player in players">
                 <q-card-section>
-                    Player Id: {{ player.id }} Cards:
+                    Player Id {{ player.id }} Cards: has turn: {{ player.hasTurn }}
                     <ol>
-                        <li v-for="card in player.cards">
-                            {{ card.id }}
+                        <li v-for="card in player.cards" :key="card.id">
+                            <q-radio :disable="!player.hasTurn" v-model="player.selectedCard" :val="card"
+                                :label="card.id" :color="card.colour" :class="getColorClass(card.colour)" keep-color />
                         </li>
                     </ol>
                     <p>
@@ -100,11 +100,10 @@
                         </li>
                     </ol>
                     <q-card-actions>
-                        <q-btn @click="sortCards(player.id)" label="Sort my cards"
-                            :disabled="!testing || !player.cards">
+                        <q-btn @click="sortCards(player.id)" label="Sort my cards" :disable="!testing || !player.cards">
                         </q-btn>
                         <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" label="Deal Me"
-                            :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)">
+                            :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length && player.hasTurn)">
                         </q-btn>
                     </q-card-actions>
                 </q-card-section>
@@ -114,15 +113,20 @@
         <p>
             Bidding card: {{ biddingCard?.id }}
         </p>
-        <p>
+        <div>
             Playing Deck:
-            <q-select outlined v-model="selectedCardsFromDeck" :options="playingDeckArray" option-value="id"
-                option-label="id" label="Select Cards" multiple />
-        </p>
+            <br>
+            Selected: {{selectedCardsFromDeck.length}}
+            <br>
+            <div class="q-gutter-sm">
+                <q-checkbox v-for="card in sortedPlayingDeckArray" :key="card.id" v-model="selectedCardsFromDeck"
+                    :val="card" :label="card.id" :color="card.colour" :class="getColorClass(card.colour)" keep-color />
+            </div>
+        </div>
         <br>
         <q-btn @click="dealSelectedCardsFromDeckOnTable" label="Deal on Table"
-            :disabled="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
-        <q-btn @click="shuffleDeck" label="Shuffle Deck" v-if="playingDeckArray.length"></q-btn>
+            :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
+        <q-btn @click="shuffleDeck" label="Shuffle Deck" v-if="sortedPlayingDeckArray.length"></q-btn>
         <br>
         <p>My Peer Id: {{peerId}}</p>
         <p>Other Peer Id: {{otherPeerId}}</p>

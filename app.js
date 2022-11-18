@@ -19,6 +19,7 @@ var app = Vue.createApp({// Vue 3.0
             pickChoices: null,
             playingDeckArray: [],
             selectedCardsFromDeck: [],
+            selectedCardsOrHousesOnTable: [],
         };
     },
     methods: {
@@ -118,6 +119,9 @@ var app = Vue.createApp({// Vue 3.0
                 this.next();
             }
         },
+        getColorClass(colour) {
+            return `text-${'black' === colour ? 'dark' : 'negative'}`;
+        },
     },
     computed: {
         looseCardsOnTable() {
@@ -125,6 +129,11 @@ var app = Vue.createApp({// Vue 3.0
         },
         housesOnTable() {
             return this.table && this.table.houses;
+        },
+        sortedPlayingDeckArray() {
+            const cards = [...this.playingDeckArray];
+            game.sortCards(cards);
+            return cards;
         },
     },
 });

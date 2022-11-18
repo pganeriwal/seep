@@ -535,14 +535,17 @@ export const game = (function () {
     };
 
     _game.bid = function (card) {
+        let valid = false;
         const aHouseCard = isHouseCard(card);
         if (aHouseCard) {
             _game._bidCard = card;
             // dealAfterBidOnTable();
+            valid = true;
         } else {
             //TODO: show invalid move
             alert("Invalid card, select a card greater than or equal to 9");
         }
+        return valid;
     };
 
     const ch = {};
@@ -817,13 +820,31 @@ export const game = (function () {
                     combinations.cardGroups.push(cardsWithMaxValue);
                     break;
                 }
-                case "duplicate-max":
+                case "duplicate-first":
                 default: {
                     const duplicateCard = {};
-                    const combinationInfo = [];
+                    const uniqueCards = [];
+                    let isAnyDuplicate = false;
                     combinations.cardGroups.forEach((cards, index) => {
                         //pg//TODO
+                        let isCardsUnique = true;
+                        cards.forEach(card => {
+                            if (duplicateCard[card.id]) {
+                                isCardsUnique = false;
+                            } else {
+                                duplicateCard[card.id] = card;
+                            }
+                        });
+                        if (isCardsUnique) {
+                            uniqueCards.push(cards);
+                        } else {
+                            isAnyDuplicate = true;
+                        }
                     });
+                    if (isAnyDuplicate) {
+                        combinations.cardGroups.splice(0, Infinity);
+                        pushToArray(combinations.cardGroups, uniqueCards);
+                    }
                     break;
                 }
             }
@@ -1152,9 +1173,10 @@ export const game = (function () {
         _game.addPlayer({ id: 4 });
         // _game.start();
 
+        const biddingPlayer = _game.getBiddingPlayer();
+
         yield;
 
-        const biddingPlayer = _game.getBiddingPlayer();
         const biddingPlayerCards = biddingPlayer.cards;
 
         _game.sortCards(biddingPlayerCards);
