@@ -251,6 +251,14 @@ export const game = (function () {
         return biddingPayer;
     };
 
+    _game.makeBidder = function (player) {
+        const previousBiddingPayer = _game.getBiddingPlayer();
+        previousBiddingPayer.hasTurn = false;
+        previousBiddingPayer.hasBid = false;
+        player.hasTurn = true;
+        player.hasBid = true;
+    };
+
     _game.changeTurnAndGetNextPlayer = function () {
         let turnPlayer = null;
         let firstPlayer = null;
@@ -522,16 +530,6 @@ export const game = (function () {
                             diff = -1;
                         } else if (aSuit > bSuit) {
                             diff = 1;
-                        } else {
-                            //TODO: the cards should only be sorted upon value if requested
-                            //but that should be the first comparison
-
-                            //if the card numbers are equal then it should be sorted based upon the value
-                            // if (aCard.value < bCard.value) {
-                            //     diff = -1;
-                            // } else if (aCard.value > bCard.value) {
-                            //     diff = 1;
-                            // }
                         }
                     }
 
@@ -553,7 +551,6 @@ export const game = (function () {
             // dealAfterBidOnTable();
             valid = true;
         } else {
-            //TODO: show invalid move
             alert("Invalid card, select a card greater than or equal to 9");
         }
         return valid;
@@ -836,7 +833,6 @@ export const game = (function () {
                     const uniqueCards = [];
                     let isAnyDuplicate = false;
                     combinations.cardGroups.forEach((cards, index) => {
-                        //pg//TODO
                         let isCardsUnique = true;
                         cards.forEach(card => {
                             if (duplicateCard[card.id]) {
@@ -1192,6 +1188,13 @@ export const game = (function () {
          *  name: "play", //play-a-card or select-cards-from-deck or draw-a-card-from-deck or select-a-card-from-deck
          *  who: "app" //app or user1 or user2 etc.
          * }
+         * playingCard?
+         * create? house number?
+         * join? house number?
+         * add? house number?
+         * pick?
+         * put?
+         * 
          */
 
         const biddingPlayer = _game.getBiddingPlayer();

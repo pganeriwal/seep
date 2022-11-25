@@ -20,6 +20,7 @@ var app = Vue.createApp({// Vue 3.0
             playingDeckArray: [],
             selectedCardsFromDeck: [],
             selectedCardsOrHousesOnTable: [],
+            biddingPlayer: null,
         };
     },
     methods: {
@@ -36,6 +37,7 @@ var app = Vue.createApp({// Vue 3.0
             this.players = [];
             this.teams = {};
             this.biddingCard = null;
+            this.biddingPlayer = null;
             this.playingDeckArray = [];
             this.selectedCardsFromDeck = [];
             game.init(this.totalPlayers);
@@ -50,6 +52,7 @@ var app = Vue.createApp({// Vue 3.0
         },
         test() {
             this.biddingCard = null;
+            this.biddingPlayer = null;
             this.selectedCardsFromDeck = [];
             this.testing = game.test();
             this.next();
@@ -146,6 +149,13 @@ var app = Vue.createApp({// Vue 3.0
                 this.biddingCard = player.selectedCard;
                 this.next({ bid: player.selectedCard });
                 player.selectedCard = null;
+            }
+        },
+        makeMeBidder(player) {
+            if (!this.biddingPlayer) {
+                this.biddingPlayer = player;
+                game.makeBidder(player);
+                this.updateData();
             }
         },
     },

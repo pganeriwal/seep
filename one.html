@@ -119,6 +119,9 @@
                         <q-btn @click="dealRandomCardsFromDeckToPlayer(player)" title="Deal Me random" round
                             icon="shuffle" :disable="!(player.hasTurn)">
                         </q-btn>
+                        <q-btn @click="makeMeBidder(player)" title="Make me bidder" round icon="flag_circle"
+                            v-if="!biddingPlayer && !player.hasBid">
+                        </q-btn>
                     </q-card-actions>
                 </q-card-section>
             </q-card>
