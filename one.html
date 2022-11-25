@@ -28,13 +28,19 @@
         <br>
         <q-btn @click="selectCreate" label="Create House" :disable="!(createChoices && createChoices.length)"></q-btn>
         <q-btn @click="selectPick" label="Pick Cards" :disable="!(pickChoices && pickChoices.length)"></q-btn>
-        <q-btn @click="selectPut" label="Put Card" :disable="!pickChoices || pickChoices.length"></q-btn>
+        <q-btn @click="selectPut" label="Put Card" :disable="!(pickChoices && !pickChoices.length)"></q-btn>
         <br>
         <br>
         <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="2">2</input>
         <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="4">4</input>
         <q-btn @click="init" label="Init"></q-btn>
         <br>
+        <p>
+            Bidding card: {{ biddingCard?.id }}
+        </p>
+        <q-btn @click="dealSelectedCardsFromDeckOnTable" title="Deal on Table" round icon="library_add"
+            :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
+        <q-btn @click="dealRandomCardsFromDeckOnTable" title="Deal random on Table" round icon="shuffle"></q-btn>
         <div class="q-pa-md row items-start q-gutter-md">
             <q-card class="table-cards">
                 <q-card-section>
@@ -100,18 +106,23 @@
                         </li>
                     </ol>
                     <q-card-actions>
-                        <q-btn @click="sortCards(player.id)" label="Sort my cards" :disable="!testing || !player.cards">
+                        <q-btn @click="sortCards(player.id)" title="Sort my cards" round icon="sort"
+                            :disable="!testing || !player.cards">
                         </q-btn>
-                        <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" label="Deal Me"
+                        <q-btn @click="bid(player)" title="Bid" round icon="flag" :disable="isBidDisabled(player)"
+                            v-if="player.hasBid">
+                        </q-btn>
+                        <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" title="Deal Me" round
+                            icon="library_add"
                             :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length && player.hasTurn)">
+                        </q-btn>
+                        <q-btn @click="dealRandomCardsFromDeckToPlayer(player)" title="Deal Me random" round
+                            icon="shuffle" :disable="!(player.hasTurn)">
                         </q-btn>
                     </q-card-actions>
                 </q-card-section>
             </q-card>
         </div>
-        </p>
-        <p>
-            Bidding card: {{ biddingCard?.id }}
         </p>
         <div>
             Playing Deck:
@@ -124,9 +135,8 @@
             </div>
         </div>
         <br>
-        <q-btn @click="dealSelectedCardsFromDeckOnTable" label="Deal on Table"
-            :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length)"></q-btn>
-        <q-btn @click="shuffleDeck" label="Shuffle Deck" v-if="sortedPlayingDeckArray.length"></q-btn>
+        <q-btn @click="shuffleDeck" title="Shuffle Deck" round icon="shuffle" v-if="sortedPlayingDeckArray.length">
+        </q-btn>
         <br>
         <p>My Peer Id: {{peerId}}</p>
         <p>Other Peer Id: {{otherPeerId}}</p>

@@ -1,8 +1,3 @@
-export const customLog = (input) => {
-    input = (input && "string" !== typeof input) ? JSON.parse(JSON.stringify(input)) : input;
-    console.log(input);
-};
-
 export const isObject = function (obj) {
     return obj && "[object Object]" === Object.prototype.toString.call(obj);
 };

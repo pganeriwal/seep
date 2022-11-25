@@ -1,8 +1,8 @@
-import { customLog, forEachInOrder } from "./util.js";
+import { forEachInOrder } from "./util.js";
 
 export const webConnect = (function (thisPeerName, thisPeerId, otherPeerId) {
     if (thisPeerName && thisPeerId && otherPeerId) {
-        customLog(`--Start: ${thisPeerName}`);
+        console.log(`--Start: ${thisPeerName}`);
 
         const peerConnections = {};
         const allConnections = {};
@@ -89,28 +89,27 @@ export const webConnect = (function (thisPeerName, thisPeerId, otherPeerId) {
         };
 
         const peer = new Peer(thisPeerId);
-        customLog(`${thisPeerName}: created`);
+        console.log(`${thisPeerName}: created`);
 
         peer.on('open', function (id) {
-            customLog(`${thisPeerName}: opened: Peer ID is: ${id}`);
+            console.log(`${thisPeerName}: opened: Peer ID is: ${id}`);
             app.peerId = id;
             if (autoConnectToOther) {
                 connectToOtherPeer(otherPeerId);
             }
         });
-        customLog(`${thisPeerName}: open`);
+        console.log(`${thisPeerName}: open`);
 
         const dataReceivedFromPeer = function (data) {
             if (addDataReceived(data)) {
-                customLog(`${thisPeerName}: Received: ${JSON.stringify(data)}`);
+                console.log(`${thisPeerName}: Received: ${JSON.stringify(data)}`);
             }
         };
 
         const sendDataToConn = function (conn, data) {
             let ret = false;
             if (isConnectionOpen(conn)) {
-                const msg = `${thisPeerName}: sendDataToConn: ${JSON.stringify(data)}`;
-                customLog(msg);
+                console.log(`${thisPeerName}: sendDataToConn:`, data);
 
                 if (addDataSent(data)) {
                     conn.send(data);
@@ -141,12 +140,12 @@ export const webConnect = (function (thisPeerName, thisPeerId, otherPeerId) {
         const registerPeerConnection = function (conn) {
             let ret = false;
             if (isConnectionValid(conn)) {
-                customLog(`${thisPeerName}: connection registered: ${conn.connectionId}, peer: ${conn.peer}`);
+                console.log(`${thisPeerName}: connection registered: ${conn.connectionId}, peer: ${conn.peer}`);
                 addConnection(conn);
                 conn.on('open', function () {
                     //pg/todo: connection is opened and past messages can be sent now
 
-                    customLog(`${thisPeerName}: connection opened`);
+                    console.log(`${thisPeerName}: connection opened`);
                     // Receive messages
                     conn.on('data', dataReceivedFromPeer);
 
@@ -182,9 +181,9 @@ export const webConnect = (function (thisPeerName, thisPeerId, otherPeerId) {
          * This listener will be called when other peer connect to you
          */
         peer.on('connection', registerPeerConnection);
-        customLog(`${thisPeerName}: connection`);
+        console.log(`${thisPeerName}: connection`);
 
-        customLog(`--End: ${thisPeerName}`);
+        console.log(`--End: ${thisPeerName}`);
 
         return {
             sendMessageToPeers,

@@ -54,11 +54,11 @@ var app = Vue.createApp({// Vue 3.0
             this.testing = game.test();
             this.next();
         },
-        next(choice) {
+        next(input) {
             this.createChoices = null;
             this.pickChoices = null;
             if (this.testing) {
-                const { done, value } = this.testing.next(choice);
+                const { done, value } = this.testing.next(input);
                 if (done) {
                     this.testing.done = done;
                 }
@@ -91,13 +91,13 @@ var app = Vue.createApp({// Vue 3.0
             return this.teams?.[team]?.pickedCardGroups;
         },
         selectCreate() {
-            this.next('create');
+            this.next({ choice: 'create' });
         },
         selectPick() {
-            this.next('pick');
+            this.next({ choice: 'pick' });
         },
         selectPut() {
-            this.next('put');
+            this.next({ choice: 'put' });
         },
         shuffleDeck() {
             game.shuffleDeck();
@@ -108,6 +108,14 @@ var app = Vue.createApp({// Vue 3.0
                 const dealt = game.dealCardsSourceToTarget(
                     game._playingDeckArray, this.selectedCardsFromDeck, game._table
                 );
+                if (dealt) {
+                    this.next();
+                }
+            }
+        },
+        dealRandomCardsFromDeckOnTable() {
+            const dealt = game.dealCardsFromDeck(4, game._table);
+            if (dealt) {
                 this.next();
             }
         },
@@ -116,11 +124,29 @@ var app = Vue.createApp({// Vue 3.0
                 const dealt = game.dealCardsSourceToTarget(
                     game._playingDeckArray, this.selectedCardsFromDeck, player
                 );
+                if (dealt) {
+                    this.next();
+                }
+            }
+        },
+        dealRandomCardsFromDeckToPlayer(player) {
+            const dealt = game.dealCardsFromDeck(4, player, game.isAnyHouseCard);
+            if (dealt) {
                 this.next();
             }
         },
         getColorClass(colour) {
             return `text-${'black' === colour ? 'dark' : 'negative'}`;
+        },
+        isBidDisabled(player) {
+            return !(player.selectedCard && game.isHouseCard(player.selectedCard) && player.hasTurn);
+        },
+        bid(player) {
+            if (player.hasBid && player.selectedCard && game.isHouseCard(player.selectedCard)) {
+                this.biddingCard = player.selectedCard;
+                this.next({ bid: player.selectedCard });
+                player.selectedCard = null;
+            }
         },
     },
     computed: {
