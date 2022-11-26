@@ -4,6 +4,7 @@ import { game } from './game-seep.js';
 var app = Vue.createApp({// Vue 3.0
     data() {
         return {
+            tab: "game",
             peerId: "",
             message: 'Please wait for your Peer Id:',
             otherPeerId: otherPeerId,
@@ -147,7 +148,7 @@ var app = Vue.createApp({// Vue 3.0
         bid(player) {
             if (player.hasBid && player.selectedCard && game.isHouseCard(player.selectedCard)) {
                 this.biddingCard = player.selectedCard;
-                this.next({ bid: player.selectedCard });
+                this.next({ bid: player.selectedCard, biddingPlayer: this.biddingPlayer });
                 player.selectedCard = null;
             }
         },

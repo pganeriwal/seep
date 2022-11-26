@@ -233,7 +233,7 @@ export const game = (function () {
     };
 
     _game.getBiddingPlayer = function () {
-        let biddingPayer = null;
+        let biddingPlayer = null;
         let firstPlayer = null;
         forEachInOrder(_game._players, (player, id, i) => {
             if (player) {
@@ -241,20 +241,20 @@ export const game = (function () {
                     firstPlayer = player;
                 }
                 if (true === player.hasBid) {
-                    biddingPayer = player;
+                    biddingPlayer = player;
                 }
             }
         });
-        biddingPayer = biddingPayer || firstPlayer;
-        biddingPayer.hasTurn = true;
-        biddingPayer.hasBid = true;
-        return biddingPayer;
+        biddingPlayer = biddingPlayer || firstPlayer;
+        biddingPlayer.hasTurn = true;
+        biddingPlayer.hasBid = true;
+        return biddingPlayer;
     };
 
     _game.makeBidder = function (player) {
-        const previousBiddingPayer = _game.getBiddingPlayer();
-        previousBiddingPayer.hasTurn = false;
-        previousBiddingPayer.hasBid = false;
+        const previousBiddingPlayer = _game.getBiddingPlayer();
+        previousBiddingPlayer.hasTurn = false;
+        previousBiddingPlayer.hasBid = false;
         player.hasTurn = true;
         player.hasBid = true;
     };
@@ -1197,16 +1197,21 @@ export const game = (function () {
          * 
          */
 
-        const biddingPlayer = _game.getBiddingPlayer();
+        let biddingPlayer = _game.getBiddingPlayer();
 
         yield;
+
+        const bidYieldValue = yield;
+        const { bid } = bidYieldValue;
+
+        if (bidYieldValue.biddingPlayer) {
+            biddingPlayer = bidYieldValue.biddingPlayer;
+        }
 
         const biddingPlayerCards = biddingPlayer.cards;
 
         // _game.sortCards(biddingPlayerCards);
         console.log("biddingPlayer.cards:", biddingPlayer.cards);
-
-        const { bid } = yield { bid: biddingPlayerCards[0] };
 
         console.log("bidding for card:", bid);
         _game.bid(bid);
