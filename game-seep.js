@@ -1209,19 +1209,17 @@ export const game = (function () {
                 break;
             }
             case _game.STATES.INIT: {
+                const { biddingPlayer } = input;
+                const biddingPlayerCards = biddingPlayer.cards;
+                console.log("biddingPlayer.cards:", biddingPlayerCards);
+                _game.makeBidder(biddingPlayer);
                 _game.start();
                 break;
             }
             case _game.STATES.START: {
                 switch (_game._sub_state) {
+                    case _game.SUB_STATES.BIDDER_SELECTED:
                     default: {
-                        const { biddingPlayer } = input;
-                        const biddingPlayerCards = biddingPlayer.cards;
-                        console.log("biddingPlayer.cards:", biddingPlayerCards);
-                        _game.makeBidder(biddingPlayer);
-                        break;
-                    }
-                    case _game.SUB_STATES.BIDDER_SELECTED: {
                         const { bid } = input;
                         console.log("bidding for card:", bid);
                         _game.bid(bid);

@@ -124,7 +124,7 @@
                                     :disable="!player.cards">
                                 </q-btn>
                                 <q-btn @click="bid(player)" title="Bid" round icon="bookmark"
-                                    :disable="isBidDisabled(player)" v-if="player.hasBid">
+                                    :disable="isBidDisabled(player)" v-if="player.hasBid && !biddingCard">
                                 </q-btn>
                                 <!-- <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" title="Deal Me" round
                                     icon="library_add"
