@@ -181,6 +181,12 @@ export const game = (function () {
     _game.STATES.END = "end";
     _game.STATES.PAUSE = "pause";
 
+    _game.SUB_STATES = {};
+    _game.SUB_STATES.BIDDER_SELECTED = "bidder_selected";
+    _game.SUB_STATES.BID = "bid";
+    _game.SUB_STATES.FIRST_TURN = "first_turn";
+    _game.SUB_STATES.LAST_TURN = "last_turn";
+
     _game.RULES = {};
     _game.RULES.RULE_BID = "bid";
     _game.RULES.RULE_CREATE_HOUSE = "create";
@@ -257,6 +263,7 @@ export const game = (function () {
         previousBiddingPlayer.hasBid = false;
         player.hasTurn = true;
         player.hasBid = true;
+        _game._sub_state = _game.SUB_STATES.BIDDER_SELECTED;
     };
 
     _game.changeTurnAndGetNextPlayer = function () {
@@ -303,7 +310,7 @@ export const game = (function () {
     const firstDeal = function () {
         //start dealing
         //pg
-        const dealt = dealToBiddingPlayer(/*_game.isAnyHouseCard*/);
+        const dealt = dealToBiddingPlayer(_game.isAnyHouseCard);
         console.log("dealt: " + dealt);
         if (!dealt) {
             firstDeal();
@@ -548,7 +555,8 @@ export const game = (function () {
         const aHouseCard = _game.isHouseCard(card);
         if (aHouseCard) {
             _game._bidCard = card;
-            // dealAfterBidOnTable();
+            dealAfterBidOnTable();
+            _game._sub_state = _game.SUB_STATES.BID;
             valid = true;
         } else {
             alert("Invalid card, select a card greater than or equal to 9");
@@ -1170,15 +1178,7 @@ export const game = (function () {
         return turnChoices;
     };
 
-    _game.nextStep = function () { };
-
-    _game.test = function* () {
-        _game.init(4, 2, deck);
-        _game.addPlayer({ id: 1 });
-        _game.addPlayer({ id: 2 });
-        _game.addPlayer({ id: 3 });
-        _game.addPlayer({ id: 4 });
-        // _game.start();
+    _game.nextStep = function (input) {
 
         /**
          * //pg//TODO
@@ -1196,6 +1196,54 @@ export const game = (function () {
          * put?
          * 
          */
+        const output = {};
+        switch (_game._state) {
+            case _game.STATES.END:
+            default: {
+                _game.init(4, 2, deck);
+                _game.addPlayer({ id: 1 });
+                _game.addPlayer({ id: 2 });
+                _game.addPlayer({ id: 3 });
+                _game.addPlayer({ id: 4 });
+                _game.getBiddingPlayer();
+                break;
+            }
+            case _game.STATES.INIT: {
+                _game.start();
+                break;
+            }
+            case _game.STATES.START: {
+                switch (_game._sub_state) {
+                    default: {
+                        const { biddingPlayer } = input;
+                        const biddingPlayerCards = biddingPlayer.cards;
+                        console.log("biddingPlayer.cards:", biddingPlayerCards);
+                        _game.makeBidder(biddingPlayer);
+                        break;
+                    }
+                    case _game.SUB_STATES.BIDDER_SELECTED: {
+                        const { bid } = input;
+                        console.log("bidding for card:", bid);
+                        _game.bid(bid);
+                        break;
+                    }
+                    case _game.SUB_STATES.BID: {
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        output.state = _game._state;
+        return output;
+    };
+
+    _game.test = function* () {
+        _game.init(4, 2, deck);
+        _game.addPlayer({ id: 1 });
+        _game.addPlayer({ id: 2 });
+        _game.addPlayer({ id: 3 });
+        _game.addPlayer({ id: 4 });
 
         let biddingPlayer = _game.getBiddingPlayer();
 
@@ -1207,6 +1255,7 @@ export const game = (function () {
         if (bidYieldValue.biddingPlayer) {
             biddingPlayer = bidYieldValue.biddingPlayer;
         }
+        // _game.start();
 
         const biddingPlayerCards = biddingPlayer.cards;
 

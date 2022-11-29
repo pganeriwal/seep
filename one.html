@@ -30,15 +30,16 @@
 
         <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="game">
-                <q-btn @click="test" label="Test Game"></q-btn>
-                <q-btn @click="next" label="Next" :disable="!testing || testing.done"></q-btn>
-                <q-btn @click="sortCards()" label="Sort all players' cards" :disable="!testing"></q-btn>
-                <br>
-                <br>
-                <q-btn @click="selectCreate" label="Create House" :disable="!(createChoices && createChoices.length)">
+                <q-btn @click="test" title="Test Game" icon="restart_alt"></q-btn>
+                <q-btn @click="next" title="Next" icon="next_plan"></q-btn>
+                <q-btn @click="sortCards()" title="Sort all players' cards" icon="sort"></q-btn>
+                <q-btn @click="selectCreate" title="Create House" icon="house"
+                    :disable="!(createChoices && createChoices.length)">
                 </q-btn>
-                <q-btn @click="selectPick" label="Pick Cards" :disable="!(pickChoices && pickChoices.length)"></q-btn>
-                <q-btn @click="selectPut" label="Put Card" :disable="!(pickChoices && !pickChoices.length)"></q-btn>
+                <q-btn @click="selectPick" title="Pick Cards" icon="savings"
+                    :disable="!(pickChoices && pickChoices.length)"></q-btn>
+                <q-btn @click="selectPut" title="Put Card" icon="heart_broken"
+                    :disable="!(pickChoices && !pickChoices.length)"></q-btn>
                 <br>
                 <br>
                 <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="2">2</input>
@@ -120,20 +121,20 @@
                             </ol>
                             <q-card-actions>
                                 <q-btn @click="sortCards(player.id)" title="Sort my cards" round icon="sort"
-                                    :disable="!testing || !player.cards">
+                                    :disable="!player.cards">
                                 </q-btn>
-                                <q-btn @click="bid(player)" title="Bid" round icon="flag"
+                                <q-btn @click="bid(player)" title="Bid" round icon="bookmark"
                                     :disable="isBidDisabled(player)" v-if="player.hasBid">
                                 </q-btn>
-                                <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" title="Deal Me" round
+                                <!-- <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" title="Deal Me" round
                                     icon="library_add"
                                     :disable="!(selectedCardsFromDeck && 4 === selectedCardsFromDeck.length && player.hasTurn)">
                                 </q-btn>
                                 <q-btn @click="dealRandomCardsFromDeckToPlayer(player)" title="Deal Me random" round
                                     icon="shuffle" :disable="!(player.hasTurn)">
-                                </q-btn>
-                                <q-btn @click="makeMeBidder(player)" title="Make me bidder" round icon="flag_circle"
-                                    v-if="!biddingPlayer && !player.hasBid">
+                                </q-btn> -->
+                                <q-btn @click="makeMeBidder(player)" :title="player.hasBid ? 'Deal':'Make me bidder'"
+                                    round icon="gavel" v-if="!biddingPlayer">
                                 </q-btn>
                             </q-card-actions>
                         </q-card-section>

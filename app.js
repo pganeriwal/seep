@@ -55,28 +55,39 @@ var app = Vue.createApp({// Vue 3.0
             this.biddingCard = null;
             this.biddingPlayer = null;
             this.selectedCardsFromDeck = [];
-            this.testing = game.test();
+            game.end();
             this.next();
         },
         next(input) {
-            this.createChoices = null;
-            this.pickChoices = null;
-            if (this.testing) {
-                const { done, value } = this.testing.next(input);
-                if (done) {
-                    this.testing.done = done;
-                }
-                if (value) {
-                    const { createChoices, pickChoices, bid } = value;
-                    this.createChoices = createChoices;
-                    this.pickChoices = pickChoices;
-                    if (bid) {
-                        this.biddingCard = bid;
-                    }
-                }
-                this.updateData();
-            }
+            const ouput = game.nextStep(input);
+            this.updateData();
         },
+        // test() {
+        //     this.biddingCard = null;
+        //     this.biddingPlayer = null;
+        //     this.selectedCardsFromDeck = [];
+        //     this.testing = game.test();
+        //     this.next();
+        // },
+        // next(input) {
+        //     this.createChoices = null;
+        //     this.pickChoices = null;
+        //     if (this.testing) {
+        //         const { done, value } = this.testing.next(input);
+        //         if (done) {
+        //             this.testing.done = done;
+        //         }
+        //         if (value) {
+        //             const { createChoices, pickChoices, bid } = value;
+        //             this.createChoices = createChoices;
+        //             this.pickChoices = pickChoices;
+        //             if (bid) {
+        //                 this.biddingCard = bid;
+        //             }
+        //         }
+        //         this.updateData();
+        //     }
+        // },
         updateData() {
             this.players = Object.values(game._players);
             this.teams = Object.assign({}, game._teams);
@@ -148,15 +159,14 @@ var app = Vue.createApp({// Vue 3.0
         bid(player) {
             if (player.hasBid && player.selectedCard && game.isHouseCard(player.selectedCard)) {
                 this.biddingCard = player.selectedCard;
-                this.next({ bid: player.selectedCard, biddingPlayer: this.biddingPlayer });
+                this.next({ bid: player.selectedCard });
                 player.selectedCard = null;
             }
         },
         makeMeBidder(player) {
             if (!this.biddingPlayer) {
                 this.biddingPlayer = player;
-                game.makeBidder(player);
-                this.updateData();
+                this.next({ biddingPlayer: player });
             }
         },
     },
