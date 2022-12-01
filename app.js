@@ -169,6 +169,17 @@ var app = Vue.createApp({// Vue 3.0
                 this.next({ biddingPlayer: player });
             }
         },
+        putCard(player) {
+            if (player.hasTurn && player.selectedCard && !this.selectedCardsOrHousesOnTable.length) {
+                this.next({
+                    player,
+                    put: player.selectedCard
+                });
+            }
+        },
+        isBidDone() {
+            return game.SUB_STATES.BID === game._sub_state;
+        },
     },
     computed: {
         looseCardsOnTable() {

@@ -1178,6 +1178,35 @@ export const game = (function () {
         return turnChoices;
     };
 
+    const handleCreatePickPutStep = function ({ player, create, pick, put, isFirstTurn }) {
+        const ret = { success: false };
+        if (player) {
+            if (create) { } else if (pick) { } else if (put) {
+                if (!isFirstTurn || put.number === _game._bidCard.number) {
+                    const allTurnChoices = _game.getTurnChoicesForHouseNumber(put.number, player.cards);
+                    console.log("allCreateChoices:", allTurnChoices);
+
+                    const createChoices = allTurnChoices[_game.RULES.RULE_CREATE_HOUSE];
+                    const canCreate = createChoices && createChoices.length;
+                    const pickChoices = allTurnChoices[_game.RULES.RULE_PICK_CARDS];
+                    const canPick = pickChoices && pickChoices.length;
+
+                    if (!canPick) {
+                        ret.success = _game.playTurnWithChoice({
+                            turn: _game.RULES.RULE_PUT_LOOSE,
+                            number: put.number,
+                            playingCard: put
+                        }, player);
+                    }
+                }
+            }
+        }
+        if (!ret.success) {
+            alert("Invalid turn");
+        }
+        return ret;
+    };
+
     _game.nextStep = function (input) {
 
         /**
@@ -1226,6 +1255,9 @@ export const game = (function () {
                         break;
                     }
                     case _game.SUB_STATES.BID: {
+                        input.isFirstTurn = true;
+                        const ret = handleCreatePickPutStep(input);
+                        Object.assign(output, ret);
                         break;
                     }
                 }
@@ -1233,6 +1265,7 @@ export const game = (function () {
             }
         }
         output.state = _game._state;
+        output.sub_state = _game._sub_state;
         return output;
     };
 
