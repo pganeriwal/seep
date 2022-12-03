@@ -305,14 +305,14 @@ export const game = (function () {
                 _game.dealCardsFromDeck(numberOfCards, player);
             }
         });
+        _game._sub_state = _game.SUB_STATES.FIRST_TURN;
     };
 
     const firstDeal = function () {
-        //start dealing
-        //pg
         const dealt = dealToBiddingPlayer(_game.isAnyHouseCard);
         console.log("dealt: " + dealt);
         if (!dealt) {
+            _game.shuffleDeck();
             firstDeal();
         };
     };
@@ -1178,31 +1178,47 @@ export const game = (function () {
         return turnChoices;
     };
 
-    const handleCreatePickPutStep = function ({ player, create, pick, put, isFirstTurn }) {
+    const handleCreatePickPutStep = function ({
+        player, playingCard, turn, isFirstTurn, selectedCardsOrHousesOnTable
+    }) {
         const ret = { success: false };
-        if (player) {
-            if (create) { } else if (pick) { } else if (put) {
-                if (!isFirstTurn || put.number === _game._bidCard.number) {
-                    const allTurnChoices = _game.getTurnChoicesForHouseNumber(put.number, player.cards);
-                    console.log("allCreateChoices:", allTurnChoices);
+        if (player && playingCard && turn && (!isFirstTurn || playingCard.number === _game._bidCard.number)) {
+            const number = playingCard.number;
 
-                    const createChoices = allTurnChoices[_game.RULES.RULE_CREATE_HOUSE];
-                    const canCreate = createChoices && createChoices.length;
-                    const pickChoices = allTurnChoices[_game.RULES.RULE_PICK_CARDS];
-                    const canPick = pickChoices && pickChoices.length;
+            const allTurnChoices = _game.getTurnChoicesForHouseNumber(number, player.cards);
+            console.log("allCreateChoices:", allTurnChoices);
 
-                    if (!canPick) {
+            const createChoices = allTurnChoices[_game.RULES.RULE_CREATE_HOUSE];
+            const canCreate = createChoices && createChoices.length;
+            const pickChoices = allTurnChoices[_game.RULES.RULE_PICK_CARDS];
+            const canPick = pickChoices && pickChoices.length;
+
+            switch (turn) {
+                case _game.RULES.RULE_CREATE_HOUSE: {
+                    break;
+                }
+                case _game.RULES.RULE_PICK_CARDS: {
+                    if (canPick) {
                         ret.success = _game.playTurnWithChoice({
-                            turn: _game.RULES.RULE_PUT_LOOSE,
-                            number: put.number,
-                            playingCard: put
+                            turn,
+                            number,
+                            playingCard,
+                            combinations: selectedCardsOrHousesOnTable,
                         }, player);
                     }
+                    break;
+                }
+                case _game.RULES.RULE_PUT_LOOSE: {
+                    if (!canPick) {
+                        ret.success = _game.playTurnWithChoice({
+                            turn,
+                            number,
+                            playingCard,
+                        }, player);
+                    }
+                    break;
                 }
             }
-        }
-        if (!ret.success) {
-            alert("Invalid turn");
         }
         return ret;
     };
@@ -1225,7 +1241,9 @@ export const game = (function () {
          * put?
          * 
          */
-        const output = {};
+        const output = {
+            success: false,
+        };
         switch (_game._state) {
             case _game.STATES.END:
             default: {
@@ -1235,6 +1253,7 @@ export const game = (function () {
                 _game.addPlayer({ id: 3 });
                 _game.addPlayer({ id: 4 });
                 _game.getBiddingPlayer();
+                output.success = true;
                 break;
             }
             case _game.STATES.INIT: {
@@ -1243,6 +1262,7 @@ export const game = (function () {
                 console.log("biddingPlayer.cards:", biddingPlayerCards);
                 _game.makeBidder(biddingPlayer);
                 _game.start();
+                output.success = true;
                 break;
             }
             case _game.STATES.START: {
@@ -1252,11 +1272,25 @@ export const game = (function () {
                         const { bid } = input;
                         console.log("bidding for card:", bid);
                         _game.bid(bid);
+                        output.success = true;
                         break;
                     }
                     case _game.SUB_STATES.BID: {
                         input.isFirstTurn = true;
                         const ret = handleCreatePickPutStep(input);
+                        if (ret.success) {
+                            dealAfterFirstTurn();
+                            _game.changeTurnAndGetNextPlayer();
+                        }
+                        Object.assign(output, ret);
+                        break;
+                    }
+                    case _game.SUB_STATES.FIRST_TURN: {
+                        input.isFirstTurn = false;
+                        const ret = handleCreatePickPutStep(input);
+                        if (ret.success) {
+                            _game.changeTurnAndGetNextPlayer();
+                        }
                         Object.assign(output, ret);
                         break;
                     }

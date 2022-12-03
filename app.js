@@ -60,6 +60,9 @@ var app = Vue.createApp({// Vue 3.0
         },
         next(input) {
             const ouput = game.nextStep(input);
+            if (!ouput.success) {
+                alert("Invalid turn");
+            }
             this.updateData();
         },
         // test() {
@@ -94,6 +97,7 @@ var app = Vue.createApp({// Vue 3.0
             this.table = Object.assign({}, game._table);
             this.playingDeckArray = [...game._playingDeckArray];
             this.selectedCardsFromDeck = [];
+            this.selectedCardsOrHousesOnTable = [];
         },
         sortCards(playerId) {
             const players = playerId ? [game._players[playerId]] : Object.values(game._players);
@@ -169,16 +173,40 @@ var app = Vue.createApp({// Vue 3.0
                 this.next({ biddingPlayer: player });
             }
         },
+        createHouse(player) {
+            if (player.hasTurn && player.selectedCard && this.selectedCardsOrHousesOnTable.length) {
+                this.next({
+                    player,
+                    playingCard: player.selectedCard,
+                    selectedCardsOrHousesOnTable: this.selectedCardsOrHousesOnTable,
+                    turn: "create",
+                });
+                player.selectedCard = null;
+            }
+        },
+        pickCards(player) {
+            if (player.hasTurn && player.selectedCard && this.selectedCardsOrHousesOnTable.length) {
+                this.next({
+                    player,
+                    playingCard: player.selectedCard,
+                    selectedCardsOrHousesOnTable: this.selectedCardsOrHousesOnTable,
+                    turn: "pick",
+                });
+                player.selectedCard = null;
+            }
+        },
         putCard(player) {
             if (player.hasTurn && player.selectedCard && !this.selectedCardsOrHousesOnTable.length) {
                 this.next({
                     player,
-                    put: player.selectedCard
+                    playingCard: player.selectedCard,
+                    turn: "put",
                 });
+                player.selectedCard = null;
             }
         },
         isBidDone() {
-            return game.SUB_STATES.BID === game._sub_state;
+            return game.SUB_STATES.BID === game._sub_state || game.SUB_STATES.FIRST_TURN === game._sub_state;
         },
     },
     computed: {
