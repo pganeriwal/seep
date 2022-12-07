@@ -38,14 +38,14 @@
                 </q-btn>
                 <q-btn @click="selectPick" title="Pick Cards" icon="savings"
                     :disable="!(pickChoices && pickChoices.length)"></q-btn>
-                <q-btn @click="selectPut" title="Put Card" icon="heart_broken"
+                <q-btn @click="selectPut" title="Put Card" icon="workspaces"
                     :disable="!(pickChoices && !pickChoices.length)"></q-btn>
                 <br>
                 <br>
-                <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="2">2</input>
+                <!-- <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="2">2</input>
                 <input type="radio" name="totalPlayers" v-model="totalPlayers" :value="4">4</input>
                 <q-btn @click="init" label="Init"></q-btn>
-                <br>
+                <br> -->
                 <p>
                     Bidding card: {{ biddingCard?.id }}
                 </p>
@@ -123,20 +123,25 @@
                                 <q-btn @click="sortCards(player.id)" title="Sort my cards" round icon="sort"
                                     :disable="!player.cards">
                                 </q-btn>
-                                <q-btn @click="createHouse(player)" title="Create House" icon="house"
+                                <q-select v-model="player.selectedHouse" :options="getCreateOptions(player)"
+                                    label="Select House"
                                     :disable="!(player.selectedCard && selectedCardsOrHousesOnTable.length)"
                                     v-if="isBidDone() && player.hasTurn">
+                                </q-select>
+                                <q-btn @click="createHouse(player)" title="Create House" icon="house"
+                                    :disable="!(player.selectedCard && selectedCardsOrHousesOnTable.length)"
+                                    v-if="player.selectedHouse && isBidDone() && player.hasTurn">
                                 </q-btn>
                                 <q-btn @click="pickCards(player)" title="Pick Cards" icon="savings"
                                     :disable="!(player.selectedCard && selectedCardsOrHousesOnTable.length)"
                                     v-if="isBidDone() && player.hasTurn">
                                 </q-btn>
-                                <q-btn @click="putCard(player)" title="Put Card" icon="heart_broken"
+                                <q-btn @click="putCard(player)" title="Put Card" icon="workspaces"
                                     :disable="!(player.selectedCard && !selectedCardsOrHousesOnTable.length)"
                                     v-if="isBidDone() && player.hasTurn">
                                 </q-btn>
                                 <br>
-                                <q-btn @click="bid(player)" title="Bid" round icon="bookmark"
+                                <q-btn @click="bid(player)" title="Bid" round icon="workspace_premium"
                                     :disable="isBidDisabled(player)" v-if="player.hasBid && !biddingCard">
                                 </q-btn>
                                 <!-- <q-btn @click="dealSelectedCardsFromDeckToPlayer(player)" title="Deal Me" round

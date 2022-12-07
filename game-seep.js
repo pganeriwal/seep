@@ -323,13 +323,13 @@ export const game = (function () {
 
     const isValidCardNumber = number => ("number" === typeof number && 1 <= number && 13 >= number);
     const isValidCardWithNumber = card => !!(card && isValidCardNumber(card.number));
-    const isValidHouseNumber = number => ("number" === typeof number && 9 <= number && 13 >= number);
-    _game.isHouseCard = card => !!(card && isValidHouseNumber(card.number));
+    _game.isValidHouseNumber = number => ("number" === typeof number && 9 <= number && 13 >= number);
+    _game.isHouseCard = card => !!(card && _game.isValidHouseNumber(card.number));
     _game.isAnyHouseCard = cards => (Array.isArray(cards) && cards.some(_game.isHouseCard));
-    const isValidHouse = house => (house && house.owner && house.ownerTeam && isValidHouseNumber(house.number)
+    const isValidHouse = house => (house && house.owner && house.ownerTeam && _game.isValidHouseNumber(house.number)
         && Array.isArray(house.cardGroups));
     const isHouseLocked = house => (house && Array.isArray(house.cardGroups) && 2 <= house.cardGroups.length);
-    const getHouseForNumber = number => (isValidHouseNumber(number) && _game._table.houses)
+    const getHouseForNumber = number => (_game.isValidHouseNumber(number) && _game._table.houses)
         ? _game._table.houses[number] : null;
     const doesHouseExistForNumber = number => !!(getHouseForNumber(number));
     const isPlayerHouseOwner = (house, player) => (isValidHouse(house) && isValidPlayer(player))
@@ -784,6 +784,14 @@ export const game = (function () {
         return ret;
     };
 
+    const filterBiggerNumberCards = (number, cards) => {
+        let ret = [];
+        if (isValidCardNumber(number) && Array.isArray(cards)) {
+            ret = cards.filter(card => isValidCardWithNumber(card) && card.number > number);
+        }
+        return ret;
+    };
+
     class House {
         constructor(number) {
             this.number = number;
@@ -943,7 +951,7 @@ export const game = (function () {
 
     turn.play[_game.RULES.RULE_CREATE_HOUSE] = function (houseNumber, playingCard, player, combinations) {
         let ret = false;
-        if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
+        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
             console.log(`creating house of (number): ${houseNumber}`);
             const house = new House(houseNumber);
@@ -955,11 +963,124 @@ export const game = (function () {
         return ret;
     };
 
+    const getAllUniqueCombinations = (numbers, targetNumber) => {
+        const ret = {
+            found: false,
+            combinationsGroup: [],
+        };
+        let combinationIndex = 0;
+        const tempNumbers = [...numbers].sort((a, b) => b - a);
+        for (let i = 0; i < tempNumbers.length; i++) {
+            const number = tempNumbers[i];
+            if (number === targetNumber) {
+                ret.combinationsGroup
+            } else if (number < targetNumber) {
+
+            } else {
+
+            }
+        }
+        return ret;
+    };
+
+    const areAllNumbersCombinations = (numbers, targetNumber) => {
+        let allNumbersAreCombinations = false;
+        const tempNumbers = [...numbers].sort((a, b) => b - a);
+        if (targetNumber >= tempNumbers[0]) {
+            const total = tempNumbers.reduce((sum, number) => sum + number, 0);
+            const isDivisible = 0 === total % targetNumber;
+            if (isDivisible) {
+                const combinationCount = total / targetNumber;
+                if (combinationCount) {
+                    let remainingCombinations = combinationCount;
+
+
+                    const halfTargetNumber = Math.trunc(targetNumber / 2);
+                    const biggerThanHalfNumbers = tempNumbers.filter(number => halfTargetNumber < number);
+                    const smallerOrEqualToHalfNumbers = tempNumbers.filter(number => halfTargetNumber >= number);
+                    if (combinationCount >= biggerThanHalfNumbers.length) {
+                        const combinationTotal = [...biggerThanHalfNumbers];
+                        if (!combinationTotal.length) {
+                            const [number] = smallerOrEqualToHalfNumbers.splice(0, 1);
+                            combinationTotal.push(number);
+                        }
+                        for (let i = 0; i < combinationTotal.length;) {
+                            while (remainingCombinations && smallerOrEqualToHalfNumbers.length) {
+                                let total = combinationTotal[i];
+                                if (total === targetNumber) {
+                                    //this total is done, check next
+                                    remainingCombinations--;
+                                    i++;
+                                    break;
+                                } else if (total < targetNumber) {
+                                    const diff = targetNumber - total;
+                                    smallerOrEqualToHalfNumbers.find(diff);
+                                } else {
+                                    //check next smaller number
+                                }
+                            }
+                            //splice from smaller and push to the combinationTotal if required
+                        }
+                    }
+                }
+            }
+        }
+        return allNumbersAreCombinations;
+    };
+
+    const getValidCombinations = (cardsAndHouses, playingCard, player, targetHouseNumber) => {
+        const ret = {
+            isValid: false,
+        };
+        const isHouseNumber = _game.isValidHouseNumber(targetHouseNumber);
+        const targetNumber = isHouseNumber ? targetHouseNumber : playingCard.number;
+        const maxHouses = isHouseNumber ? 2 : 1;
+        const cards = [];
+        const houses = [];
+        let allCardsAndHousesValid = true;
+        let numberTotal = 0;
+        if (cardsAndHouses) {
+            cardsAndHouses.some(cardOrHouse => {
+                const number = cardOrHouse.number;
+                if (targetNumber < number) {
+                    allCardsAndHousesValid = false;
+                } else {
+                    numberTotal += number;
+                    if (isValidHouse(cardOrHouse)) {
+                        houses.push(cardOrHouse);
+                    } else {
+                        cards.push(cardOrHouse);
+                    }
+                }
+                return !allCardsAndHousesValid;
+            });
+        }
+        const isDivisible = 0 === numberTotal % targetNumber;
+        const count = numberTotal / targetNumber;
+        /**
+         * No card or house should be bigger in number than the target number
+         * AND
+         * the number total should be divisible by the target number
+         * AND
+         * the selected houses should not be more than 2.
+         * 2 houses can only be selected if one house is broken and added to the other while creating
+         */
+        if (allCardsAndHousesValid && isDivisible && maxHouses >= houses.length) {
+            const playerNonPlayingCards = _game._deck.removeCards([playingCard], player.cards);
+            const combinations = getCombinationsForCardNumber(false, targetNumber, cardsAndHouses, true);
+            ret.isValid = combinations.found
+                && count === (combinations.cardGroups.length + combinations.singleCards.length);
+        }
+        return ret;
+    };
+
     turn.play[_game.RULES.RULE_PICK_CARDS] = function (pickNumber, playingCard, player, combinations) {
         let ret = false;
-        if (isValidCardNumber(pickNumber) && isValidCardWithNumber(playingCard)
-            && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
+        if (isValidCardNumber(pickNumber) && isValidCardWithNumber(playingCard) && pickNumber === playingCard.number
+            && Array.isArray(combinations) && player && Array.isArray(player.cards)
+            && getValidCombinations(combinations, playingCard, player).isValid) {
             console.log(`picking card(s) of (number): ${pickNumber}`);
+            //pg//TODO validate the combinations
             /**
              * ideally we should validate if the combinations are valid or not again
              * but now we are only validating the total
@@ -1006,7 +1127,7 @@ export const game = (function () {
     turn.play[_game.RULES.RULE_JOIN_HOUSE] = function (houseNumber, playingCard, player, combinations) {
         let ret = false;
         let house = null;
-        if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
+        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards)
             && (house = getHouseForNumber(houseNumber))) {
             if (!isPlayersTeamHouseOwner(house, player)) {
@@ -1023,7 +1144,7 @@ export const game = (function () {
     turn.play[_game.RULES.RULE_ADD_CARDS_TO_HOUSE] = function (houseNumber, playingCard, player, combinations) {
         let ret = false;
         let house = null;
-        if (isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
+        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
             && Array.isArray(combinations) && player && Array.isArray(player.cards) && (house = getHouseForNumber(houseNumber))) {
             if (isPlayersTeamHouseOwner(house, player)) {
                 console.log(`adding card to house of (number): ${houseNumber}`);
@@ -1134,7 +1255,7 @@ export const game = (function () {
         const turnChoices = {};
         turnChoices[create] = [];
         turnChoices[pick] = [];
-        if (isValidHouseNumber(houseNumber) && Array.isArray(cards)) {
+        if (_game.isValidHouseNumber(houseNumber) && Array.isArray(cards)) {
             /**
              * filter the cards as follows:
              * 1. keep cards with number smaller than the houseNumber
@@ -1163,38 +1284,47 @@ export const game = (function () {
             };
             //find combinations equal to the houseNumber for each sameHouseNumberCards
             forEachInOrder(sameHouseNumberCards, card => {
-                if (isValidCardWithNumber(card)) {
-                    pushChoicesForCardNumber(card, card.number);
-                }
+                pushChoicesForCardNumber(card, card.number);
             });
             //find combinations houseNumber - card.number for each smallerNumberCards
             forEachInOrder(smallerNumberCards, card => {
-                if (isValidCardWithNumber(card)) {
-                    const diffForHouse = houseNumber - card.number;
-                    pushChoicesForCardNumber(card, diffForHouse);
-                }
+                const diffForHouse = houseNumber - card.number;
+                pushChoicesForCardNumber(card, diffForHouse);
             });
         }
         return turnChoices;
     };
 
     const handleCreatePickPutStep = function ({
-        player, playingCard, turn, isFirstTurn, selectedCardsOrHousesOnTable
+        player, playingCard, turn, isFirstTurn, selectedCardsOrHousesOnTable, houseNumber
     }) {
         const ret = { success: false };
-        if (player && playingCard && turn && (!isFirstTurn || playingCard.number === _game._bidCard.number)) {
+        const houseOrPlayingNumber = houseNumber || playingCard.number;
+        if (player && playingCard && turn && (!isFirstTurn || houseOrPlayingNumber === _game._bidCard.number)) {
             const number = playingCard.number;
 
-            const allTurnChoices = _game.getTurnChoicesForHouseNumber(number, player.cards);
-            console.log("allCreateChoices:", allTurnChoices);
+            let combinations = _game.anyCombinationsOnTable(number);
+            console.log("pg handleCreatePickPutStep combinations on table:", combinations);
+            const canPick = combinations.found;
 
-            const createChoices = allTurnChoices[_game.RULES.RULE_CREATE_HOUSE];
-            const canCreate = createChoices && createChoices.length;
-            const pickChoices = allTurnChoices[_game.RULES.RULE_PICK_CARDS];
-            const canPick = pickChoices && pickChoices.length;
+            // const allTurnChoices = _game.getTurnChoicesForHouseNumber(number, player.cards);
+            // console.log("allCreateChoices:", allTurnChoices);
+
+            // const createChoices = allTurnChoices[_game.RULES.RULE_CREATE_HOUSE];
+            // const canCreate = createChoices && createChoices.length;
+            // const pickChoices = allTurnChoices[_game.RULES.RULE_PICK_CARDS];
+            // const canPick = pickChoices && pickChoices.length;
 
             switch (turn) {
                 case _game.RULES.RULE_CREATE_HOUSE: {
+                    if (_game.isValidHouseNumber(houseNumber)) {
+                        ret.success = _game.playTurnWithChoice({
+                            turn,
+                            number: houseNumber,
+                            playingCard,
+                            combinations: selectedCardsOrHousesOnTable,
+                        }, player);
+                    }
                     break;
                 }
                 case _game.RULES.RULE_PICK_CARDS: {

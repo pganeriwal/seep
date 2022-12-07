@@ -174,12 +174,14 @@ var app = Vue.createApp({// Vue 3.0
             }
         },
         createHouse(player) {
-            if (player.hasTurn && player.selectedCard && this.selectedCardsOrHousesOnTable.length) {
+            if (player.hasTurn && player.selectedCard && player.selectedHouse
+                && this.selectedCardsOrHousesOnTable.length) {
                 this.next({
                     player,
                     playingCard: player.selectedCard,
                     selectedCardsOrHousesOnTable: this.selectedCardsOrHousesOnTable,
                     turn: "create",
+                    houseNumber: player.selectedHouse,
                 });
                 player.selectedCard = null;
             }
@@ -204,6 +206,14 @@ var app = Vue.createApp({// Vue 3.0
                 });
                 player.selectedCard = null;
             }
+        },
+        getCreateOptions(player) {
+            return player.cards.reduce((acc, card) => {
+                if (game.isValidHouseNumber(card.number)) {
+                    acc.push(card.number);
+                }
+                return acc;
+            }, []).sort((a, b) => b - a);
         },
         isBidDone() {
             return game.SUB_STATES.BID === game._sub_state || game.SUB_STATES.FIRST_TURN === game._sub_state;
