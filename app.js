@@ -184,6 +184,7 @@ var app = Vue.createApp({// Vue 3.0
                     houseNumber: player.selectedHouse,
                 });
                 player.selectedCard = null;
+                player.selectedHouse = null;
             }
         },
         pickCards(player) {
@@ -195,6 +196,7 @@ var app = Vue.createApp({// Vue 3.0
                     turn: "pick",
                 });
                 player.selectedCard = null;
+                player.selectedHouse = null;
             }
         },
         putCard(player) {
@@ -205,15 +207,17 @@ var app = Vue.createApp({// Vue 3.0
                     turn: "put",
                 });
                 player.selectedCard = null;
+                player.selectedHouse = null;
             }
         },
         getCreateOptions(player) {
-            return player.cards.reduce((acc, card) => {
+            const set = player.cards.reduce((acc, card) => {
                 if (game.isValidHouseNumber(card.number)) {
-                    acc.push(card.number);
+                    acc.add(card.number);
                 }
                 return acc;
-            }, []).sort((a, b) => b - a);
+            }, new Set());
+            return Array.from(set).sort((a, b) => b - a);
         },
         isBidDone() {
             return game.SUB_STATES.BID === game._sub_state || game.SUB_STATES.FIRST_TURN === game._sub_state;

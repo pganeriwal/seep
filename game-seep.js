@@ -381,7 +381,7 @@ export const game = (function () {
     };
     const addCardGroupsToHouse = (house, cardGroups) => {
         let ret = false;
-        if (isValidHouse(house) && house.number === getCardGroupsNumber(cardGroups)) {
+        if (isValidHouse(house)/*  && 0 === getCardGroupsNumber(cardGroups) % house.number */) {
             pushToArray(house.cardGroups, cardGroups);
             ret = true;
         }
@@ -845,20 +845,19 @@ export const game = (function () {
                 }
                 case "duplicate-first":
                 default: {
+                    // handle, [6,3,2,1] [6,2,4] [1,3,8] [4,8] 
                     const duplicateCard = {};
                     const uniqueCards = [];
                     let isAnyDuplicate = false;
                     combinations.cardGroups.forEach((cards, index) => {
-                        let isCardsUnique = true;
-                        cards.forEach(card => {
-                            if (duplicateCard[card.id]) {
-                                isCardsUnique = false;
-                            } else {
-                                duplicateCard[card.id] = card;
-                            }
+                        const duplicateCardsLocal = {};
+                        const anyDuplicateFound = cards.some(card => {
+                            duplicateCardsLocal[card.id] = card;
+                            return duplicateCard[card.id];
                         });
-                        if (isCardsUnique) {
+                        if (!anyDuplicateFound) {
                             uniqueCards.push(cards);
+                            Object.assign(duplicateCard, duplicateCardsLocal);
                         } else {
                             isAnyDuplicate = true;
                         }
@@ -952,7 +951,8 @@ export const game = (function () {
     turn.play[_game.RULES.RULE_CREATE_HOUSE] = function (houseNumber, playingCard, player, combinations) {
         let ret = false;
         if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
-            && Array.isArray(combinations) && player && Array.isArray(player.cards)) {
+            && Array.isArray(combinations) && player && Array.isArray(player.cards)
+            && getValidCombinations(combinations, playingCard, player, houseNumber).isValid) {
             console.log(`creating house of (number): ${houseNumber}`);
             const house = new House(houseNumber);
             _game._table.houses = _game._table.houses || {};
@@ -963,70 +963,70 @@ export const game = (function () {
         return ret;
     };
 
-    const getAllUniqueCombinations = (numbers, targetNumber) => {
-        const ret = {
-            found: false,
-            combinationsGroup: [],
-        };
-        let combinationIndex = 0;
-        const tempNumbers = [...numbers].sort((a, b) => b - a);
-        for (let i = 0; i < tempNumbers.length; i++) {
-            const number = tempNumbers[i];
-            if (number === targetNumber) {
-                ret.combinationsGroup
-            } else if (number < targetNumber) {
+    // const getAllUniqueCombinations = (numbers, targetNumber) => {
+    //     const ret = {
+    //         found: false,
+    //         combinationsGroup: [],
+    //     };
+    //     let combinationIndex = 0;
+    //     const tempNumbers = [...numbers].sort((a, b) => b - a);
+    //     for (let i = 0; i < tempNumbers.length; i++) {
+    //         const number = tempNumbers[i];
+    //         if (number === targetNumber) {
+    //             ret.combinationsGroup
+    //         } else if (number < targetNumber) {
 
-            } else {
+    //         } else {
 
-            }
-        }
-        return ret;
-    };
+    //         }
+    //     }
+    //     return ret;
+    // };
 
-    const areAllNumbersCombinations = (numbers, targetNumber) => {
-        let allNumbersAreCombinations = false;
-        const tempNumbers = [...numbers].sort((a, b) => b - a);
-        if (targetNumber >= tempNumbers[0]) {
-            const total = tempNumbers.reduce((sum, number) => sum + number, 0);
-            const isDivisible = 0 === total % targetNumber;
-            if (isDivisible) {
-                const combinationCount = total / targetNumber;
-                if (combinationCount) {
-                    let remainingCombinations = combinationCount;
+    // const areAllNumbersCombinations = (numbers, targetNumber) => {
+    //     let allNumbersAreCombinations = false;
+    //     const tempNumbers = [...numbers].sort((a, b) => b - a);
+    //     if (targetNumber >= tempNumbers[0]) {
+    //         const total = tempNumbers.reduce((sum, number) => sum + number, 0);
+    //         const isDivisible = 0 === total % targetNumber;
+    //         if (isDivisible) {
+    //             const combinationCount = total / targetNumber;
+    //             if (combinationCount) {
+    //                 let remainingCombinations = combinationCount;
 
 
-                    const halfTargetNumber = Math.trunc(targetNumber / 2);
-                    const biggerThanHalfNumbers = tempNumbers.filter(number => halfTargetNumber < number);
-                    const smallerOrEqualToHalfNumbers = tempNumbers.filter(number => halfTargetNumber >= number);
-                    if (combinationCount >= biggerThanHalfNumbers.length) {
-                        const combinationTotal = [...biggerThanHalfNumbers];
-                        if (!combinationTotal.length) {
-                            const [number] = smallerOrEqualToHalfNumbers.splice(0, 1);
-                            combinationTotal.push(number);
-                        }
-                        for (let i = 0; i < combinationTotal.length;) {
-                            while (remainingCombinations && smallerOrEqualToHalfNumbers.length) {
-                                let total = combinationTotal[i];
-                                if (total === targetNumber) {
-                                    //this total is done, check next
-                                    remainingCombinations--;
-                                    i++;
-                                    break;
-                                } else if (total < targetNumber) {
-                                    const diff = targetNumber - total;
-                                    smallerOrEqualToHalfNumbers.find(diff);
-                                } else {
-                                    //check next smaller number
-                                }
-                            }
-                            //splice from smaller and push to the combinationTotal if required
-                        }
-                    }
-                }
-            }
-        }
-        return allNumbersAreCombinations;
-    };
+    //                 const halfTargetNumber = Math.trunc(targetNumber / 2);
+    //                 const biggerThanHalfNumbers = tempNumbers.filter(number => halfTargetNumber < number);
+    //                 const smallerOrEqualToHalfNumbers = tempNumbers.filter(number => halfTargetNumber >= number);
+    //                 if (combinationCount >= biggerThanHalfNumbers.length) {
+    //                     const combinationTotal = [...biggerThanHalfNumbers];
+    //                     if (!combinationTotal.length) {
+    //                         const [number] = smallerOrEqualToHalfNumbers.splice(0, 1);
+    //                         combinationTotal.push(number);
+    //                     }
+    //                     for (let i = 0; i < combinationTotal.length;) {
+    //                         while (remainingCombinations && smallerOrEqualToHalfNumbers.length) {
+    //                             let total = combinationTotal[i];
+    //                             if (total === targetNumber) {
+    //                                 //this total is done, check next
+    //                                 remainingCombinations--;
+    //                                 i++;
+    //                                 break;
+    //                             } else if (total < targetNumber) {
+    //                                 const diff = targetNumber - total;
+    //                                 smallerOrEqualToHalfNumbers.find(diff);
+    //                             } else {
+    //                                 //check next smaller number
+    //                             }
+    //                         }
+    //                         //splice from smaller and push to the combinationTotal if required
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return allNumbersAreCombinations;
+    // };
 
     const getValidCombinations = (cardsAndHouses, playingCard, player, targetHouseNumber) => {
         const ret = {
@@ -1039,13 +1039,18 @@ export const game = (function () {
         const houses = [];
         let allCardsAndHousesValid = true;
         let numberTotal = 0;
+        let valueTotal = 0;
+        let cardsAndHousesTemp;
         if (cardsAndHouses) {
-            cardsAndHouses.some(cardOrHouse => {
+            cardsAndHousesTemp = [...cardsAndHouses];
+            isHouseNumber && cardsAndHousesTemp.push(playingCard);
+            cardsAndHousesTemp.some(cardOrHouse => {
                 const number = cardOrHouse.number;
                 if (targetNumber < number) {
                     allCardsAndHousesValid = false;
                 } else {
                     numberTotal += number;
+                    valueTotal += cardOrHouse.value;
                     if (isValidHouse(cardOrHouse)) {
                         houses.push(cardOrHouse);
                     } else {
@@ -1067,9 +1072,11 @@ export const game = (function () {
          */
         if (allCardsAndHousesValid && isDivisible && maxHouses >= houses.length) {
             const playerNonPlayingCards = _game._deck.removeCards([playingCard], player.cards);
-            const combinations = getCombinationsForCardNumber(false, targetNumber, cardsAndHouses, true);
+            const combinations = getCombinationsForCardNumber(false, targetNumber, cardsAndHousesTemp, true);
+            filterCombinations(combinations);
             ret.isValid = combinations.found
                 && count === (combinations.cardGroups.length + combinations.singleCards.length);
+            cardsAndHouses._value = valueTotal;
         }
         return ret;
     };
