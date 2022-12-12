@@ -67,30 +67,24 @@
                             </ol>
                         </q-card-section>
                     </q-card>
-                    <q-card class="table-houses">
+                    <q-card class="table-houses" v-for="house in housesOnTable">
                         <q-card-section>
                             <p>
-                                Houses on the Table:
+                                <q-checkbox v-model="selectedCardsOrHousesOnTable" :val="house"
+                                    :label="'House on the Table: ' + house.number" />
                             </p>
-                            <ol>
-                                <li v-for="house in housesOnTable">
-                                    <p>
-                                        <q-checkbox v-model="selectedCardsOrHousesOnTable" :val="house"
-                                            :label="house.number" />
-                                        <br>
-                                        Owner: <b>{{ house.owner }}</b>
-                                        <br>
-                                        Owner Team: <b>{{ house.ownerTeam }}</b>
-                                        <br>
-                                        Value: <b>{{ house.value }}</b>
-                                        <br>
-                                        Cards:
-                                    </p>
-                                    <ol v-for="cardGroups in house.cardGroups">
-                                        <li v-for="card in cardGroups">
-                                            {{ card.id }}
-                                        </li>
-                                    </ol>
+                            <p>
+                                Owner: <b>{{ house.owner }}</b>
+                                <br>
+                                Owner Team: <b>{{ house.ownerTeam }}</b>
+                                <br>
+                                Value: <b>{{ house.value }}</b>
+                                <br>
+                                Cards:
+                            </p>
+                            <ol v-for="cardGroups in house.cardGroups">
+                                <li v-for="card in cardGroups">
+                                    {{ card.id }}
                                 </li>
                             </ol>
                         </q-card-section>

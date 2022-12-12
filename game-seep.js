@@ -328,7 +328,16 @@ export const game = (function () {
     _game.isAnyHouseCard = cards => (Array.isArray(cards) && cards.some(_game.isHouseCard));
     const isValidHouse = house => (house && house.owner && house.ownerTeam && _game.isValidHouseNumber(house.number)
         && Array.isArray(house.cardGroups));
-    const isHouseLocked = house => (house && Array.isArray(house.cardGroups) && 2 <= house.cardGroups.length);
+    const isHouseLocked = house => (house && Array.isArray(house.cardGroups)
+        && (2 <= house.cardGroups.length
+            || 2 <= (house.cardGroups.reduce((groupTotal, cards) => {
+                groupTotal += cards.reduce((total, card) => {
+                    total += card.number;
+                    return total;
+                }, 0);
+                return groupTotal;
+            }, 0)) / house.number
+        ));
     const getHouseForNumber = number => (_game.isValidHouseNumber(number) && _game._table.houses)
         ? _game._table.houses[number] : null;
     const doesHouseExistForNumber = number => !!(getHouseForNumber(number));
@@ -336,11 +345,11 @@ export const game = (function () {
         ? 0 <= house.owner.indexOf(player.id) : false;
     const isPlayerFirstHouseOwner = (house, player) => (isValidHouse(house) && isValidPlayer(player))
         ? 0 === house.owner.indexOf(player.id) : false;
-    const isPlayersTeamHouseOwner = (house, player) => (isValidHouse(house) && isValidPlayer(player))
+    _game.isPlayersTeamHouseOwner = (house, player) => (isValidHouse(house) && isValidPlayer(player))
         ? 0 <= house.ownerTeam.indexOf(player.team) : false;
     const addPlayerAsHouseOwner = (house, player) => {
         let ret = false;
-        if (isValidHouse(house) && isValidPlayer(player) && !isPlayersTeamHouseOwner(house, player)) {
+        if (isValidHouse(house) && isValidPlayer(player) && !_game.isPlayersTeamHouseOwner(house, player)) {
             house.owner.push(player.id);
             house.ownerTeam.push(player.team);
             ret = true;
@@ -942,6 +951,7 @@ export const game = (function () {
             }
             addPlayerAsHouseOwner(house, player);
             addCardGroupsToHouse(house, allCardGroups);
+            house.value += (allCardGroups._value || 0);
             player.cards = _game._deck.removeCards([playingCard], player.cards);
             ret = true;
         }
@@ -959,6 +969,38 @@ export const game = (function () {
             _game._table.houses[house.number] = house;
             ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
             console.log(`isHouseLocked: ${isHouseLocked(house)}`);
+        }
+        return ret;
+    };
+
+    // _game.RULES.RULE_JOIN_HOUSE = "join";
+    turn.play[_game.RULES.RULE_JOIN_HOUSE] = function (houseNumber, playingCard, player, combinations) {
+        let ret = false;
+        let house = null;
+        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
+            && Array.isArray(combinations) && player && Array.isArray(player.cards)
+            && (house = getHouseForNumber(houseNumber))) {
+            if (!_game.isPlayersTeamHouseOwner(house, player)) {
+                console.log(`joining house of (number): ${houseNumber}`);
+                ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
+                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
+            }
+        }
+        return ret;
+    };
+
+    // _game.RULES.RULE_ADD_CARDS_TO_HOUSE = "add";
+    //pg
+    turn.play[_game.RULES.RULE_ADD_CARDS_TO_HOUSE] = function (houseNumber, playingCard, player, combinations) {
+        let ret = false;
+        let house = null;
+        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
+            && Array.isArray(combinations) && player && Array.isArray(player.cards) && (house = getHouseForNumber(houseNumber))) {
+            if (_game.isPlayersTeamHouseOwner(house, player)) {
+                console.log(`adding card to house of (number): ${houseNumber}`);
+                ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
+                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
+            }
         }
         return ret;
     };
@@ -1059,6 +1101,7 @@ export const game = (function () {
                 }
                 return !allCardsAndHousesValid;
             });
+            isHouseNumber && (valueTotal -= playingCard.value);
         }
         const isDivisible = 0 === numberTotal % targetNumber;
         const count = numberTotal / targetNumber;
@@ -1125,38 +1168,6 @@ export const game = (function () {
                 _game._table.cards.push(playingCard);
                 player.cards = _game._deck.removeCards([playingCard], player.cards);
                 ret = true;
-            }
-        }
-        return ret;
-    };
-
-    // _game.RULES.RULE_JOIN_HOUSE = "join";
-    turn.play[_game.RULES.RULE_JOIN_HOUSE] = function (houseNumber, playingCard, player, combinations) {
-        let ret = false;
-        let house = null;
-        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
-            && Array.isArray(combinations) && player && Array.isArray(player.cards)
-            && (house = getHouseForNumber(houseNumber))) {
-            if (!isPlayersTeamHouseOwner(house, player)) {
-                console.log(`joining house of (number): ${houseNumber}`);
-                ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
-                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
-            }
-        }
-        return ret;
-    };
-
-    // _game.RULES.RULE_ADD_CARDS_TO_HOUSE = "add";
-    //pg
-    turn.play[_game.RULES.RULE_ADD_CARDS_TO_HOUSE] = function (houseNumber, playingCard, player, combinations) {
-        let ret = false;
-        let house = null;
-        if (_game.isValidHouseNumber(houseNumber) && isValidCardWithNumber(playingCard)
-            && Array.isArray(combinations) && player && Array.isArray(player.cards) && (house = getHouseForNumber(houseNumber))) {
-            if (isPlayersTeamHouseOwner(house, player)) {
-                console.log(`adding card to house of (number): ${houseNumber}`);
-                ret = playCardToCreateJoinAddHouse(house, playingCard, combinations, player);
-                console.log("Should be true always isHouseLocked: " + isHouseLocked(house));
             }
         }
         return ret;

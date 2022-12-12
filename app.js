@@ -1,5 +1,6 @@
 import { webConnect } from './peer.js';
 import { game } from './game-seep.js';
+import { forEachInOrder } from './util.js';
 
 var app = Vue.createApp({// Vue 3.0
     data() {
@@ -217,6 +218,9 @@ var app = Vue.createApp({// Vue 3.0
                 }
                 return acc;
             }, new Set());
+            forEachInOrder(this.housesOnTable, house => {
+                game.isPlayersTeamHouseOwner(house, player) && set.add(house.number);
+            });
             return Array.from(set).sort((a, b) => b - a);
         },
         isBidDone() {
